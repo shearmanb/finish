@@ -1,0 +1,322 @@
+// Bourbon tasting & bottle tracking — data model.
+// Two kinds of tables: LOOKUPS (user-editable lists, uniform shape, soft-archived) and
+// RECORDS (the actual data). Lookups are never hard-deleted so history never breaks.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+// ---------- Enums (structural; code branches on these) ----------
+
+enum BottleStatus {
+  SEALED
+  OPEN
+  FINISHED
+}
+
+enum Prep {
+  NEAT
+  WATER
+  ICE
+}
+
+enum PourUnit {
+  OZ
+  ML
+}
+
+enum ScaleType {
+  NUMERIC
+  STAR
+}
+
+enum Intensity {
+  LIGHT
+  MEDIUM
+  STRONG
+}
+
+// ---------- Lookups ----------
+
+model Distillery {
+  id         String    @id @default(cuid())
+  name       String    @unique
+  region     String?
+  sortIndex  Int       @default(0)
+  isArchived Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  products   Product[]
+}
+
+model Glassware {
+  id         String   @id @default(cuid())
+  name       String   @unique
+  sortIndex  Int      @default(0)
+  isArchived Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  pours      Pour[]
+}
+
+model Location {
+  id         String   @id @default(cuid())
+  name       String   @unique
+  sortIndex  Int      @default(0)
+  isArchived Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  pours      Pour[]
+}
+
+model Mouthfeel {
+  id         String          @id @default(cuid())
+  name       String          @unique
+  sortIndex  Int             @default(0)
+  isArchived Boolean         @default(false)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  pours      PourMouthfeel[]
+}
+
+model TastingPhase {
+  id         String          @id @default(cuid())
+  name       String          @unique
+  sortIndex  Int             @default(0)
+  isArchived Boolean         @default(false)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  notes      PourPhaseNote[]
+  flavors    PourFlavor[]
+  steps      GuidedStep[]
+}
+
+model RatingDimension {
+  id         String              @id @default(cuid())
+  name       String              @unique
+  scaleType  ScaleType           @default(NUMERIC)
+  minValue   Float               @default(0)
+  maxValue   Float               @default(10)
+  step       Float? // null => free decimal entry
+  sortIndex  Int                 @default(0)
+  isArchived Boolean             @default(false)
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+  anchors    RatingScaleAnchor[]
+  values     PourRating[]
+}
+
+model RatingScaleAnchor {
+  id          String          @id @default(cuid())
+  dimensionId String
+  dimension   RatingDimension @relation(fields: [dimensionId], references: [id], onDelete: Cascade)
+  value       Float
+  label       String
+  description String?
+
+  @@unique([dimensionId, value])
+  @@index([dimensionId])
+}
+
+model FlavorCategory {
+  id         String           @id @default(cuid())
+  name       String
+  parentId   String?
+  parent     FlavorCategory?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children   FlavorCategory[] @relation("CategoryTree")
+  flavors    Flavor[]
+  sortIndex  Int              @default(0)
+  isArchived Boolean          @default(false)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  @@index([parentId])
+}
+
+model Flavor {
+  id          String         @id @default(cuid())
+  name        String
+  categoryId  String
+  category    FlavorCategory @relation(fields: [categoryId], references: [id])
+  sortIndex   Int            @default(0)
+  isArchived  Boolean        @default(false)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  pourFlavors PourFlavor[]
+
+  @@index([categoryId])
+}
+
+model GuidedStep {
+  id              String       @id @default(cuid())
+  phaseId         String
+  phase           TastingPhase @relation(fields: [phaseId], references: [id])
+  title           String
+  instruction     String
+  capturesNote    Boolean      @default(true)
+  capturesFlavors Boolean      @default(true)
+  sortIndex       Int          @default(0)
+  isArchived      Boolean      @default(false)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([phaseId])
+}
+
+// ---------- Records: Product -> Bottle -> Pour ----------
+
+model Product {
+  id           String         @id @default(cuid())
+  name         String
+  distilleryId String
+  distillery   Distillery     @relation(fields: [distilleryId], references: [id])
+  proof        Float? // source of truth
+  abv          Float? // derived from proof (proof / 2)
+  caskStrength Boolean        @default(false)
+  category     String?
+  mashBill     String?
+  ageStatement String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  bottles      Bottle[]
+  wishlistItem WishlistItem[]
+
+  @@index([distilleryId])
+}
+
+model Bottle {
+  id           String        @id @default(cuid())
+  productId    String
+  product      Product       @relation(fields: [productId], references: [id])
+  bottlingName String? // single-barrel / store-pick / specific bottling
+  status       BottleStatus  @default(SEALED)
+  fillLevel    Int? // 0-100 percent remaining
+  purchaseDate DateTime?
+  store        String?
+  pricePaid    Decimal?      @db.Decimal(10, 2)
+  msrp         Decimal?      @db.Decimal(10, 2)
+  storageLocation String?
+  openedAt     DateTime?
+  finishedAt   DateTime?
+  notes        String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  photos       BottlePhoto[]
+  pours        Pour[]
+
+  @@index([productId])
+  @@index([status])
+}
+
+model BottlePhoto {
+  id        String   @id @default(cuid())
+  bottleId  String
+  bottle    Bottle   @relation(fields: [bottleId], references: [id], onDelete: Cascade)
+  url       String
+  width     Int?
+  height    Int?
+  sortIndex Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([bottleId])
+}
+
+model Pour {
+  id           String          @id @default(cuid())
+  bottleId     String
+  bottle       Bottle          @relation(fields: [bottleId], references: [id])
+  pourNumber   Int
+  pouredAt     DateTime        @default(now())
+  locationId   String?
+  location     Location?       @relation(fields: [locationId], references: [id])
+  companions   String?
+  glasswareId  String?
+  glassware    Glassware?      @relation(fields: [glasswareId], references: [id])
+  prep         Prep            @default(NEAT)
+  prepNote     String?
+  pourSize     Float?
+  pourSizeUnit PourUnit        @default(OZ)
+  isGuided     Boolean         @default(false)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  notes        PourPhaseNote[]
+  flavors      PourFlavor[]
+  mouthfeels   PourMouthfeel[]
+  ratings      PourRating[]
+
+  @@unique([bottleId, pourNumber])
+  @@index([bottleId])
+  @@index([pouredAt])
+}
+
+model PourPhaseNote {
+  id      String       @id @default(cuid())
+  pourId  String
+  pour    Pour         @relation(fields: [pourId], references: [id], onDelete: Cascade)
+  phaseId String
+  phase   TastingPhase @relation(fields: [phaseId], references: [id])
+  text    String
+
+  @@unique([pourId, phaseId])
+  @@index([pourId])
+}
+
+model PourFlavor {
+  id        String       @id @default(cuid())
+  pourId    String
+  pour      Pour         @relation(fields: [pourId], references: [id], onDelete: Cascade)
+  phaseId   String
+  phase     TastingPhase @relation(fields: [phaseId], references: [id])
+  flavorId  String
+  flavor    Flavor       @relation(fields: [flavorId], references: [id])
+  intensity Intensity?
+
+  @@unique([pourId, phaseId, flavorId])
+  @@index([pourId])
+  @@index([flavorId])
+}
+
+model PourMouthfeel {
+  id          String    @id @default(cuid())
+  pourId      String
+  pour        Pour      @relation(fields: [pourId], references: [id], onDelete: Cascade)
+  mouthfeelId String
+  mouthfeel   Mouthfeel @relation(fields: [mouthfeelId], references: [id])
+
+  @@unique([pourId, mouthfeelId])
+  @@index([pourId])
+}
+
+model PourRating {
+  id          String          @id @default(cuid())
+  pourId      String
+  pour        Pour            @relation(fields: [pourId], references: [id], onDelete: Cascade)
+  dimensionId String
+  dimension   RatingDimension @relation(fields: [dimensionId], references: [id])
+  value       Float
+
+  @@unique([pourId, dimensionId])
+  @@index([pourId])
+  @@index([dimensionId])
+}
+
+model WishlistItem {
+  id           String   @id @default(cuid())
+  productId    String?
+  product      Product? @relation(fields: [productId], references: [id])
+  freeTextName String?
+  notes        String?
+  priority     Int      @default(0)
+  targetPrice  Decimal? @db.Decimal(10, 2)
+  acquired     Boolean  @default(false)
+  sortIndex    Int      @default(0)
+  isArchived   Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
