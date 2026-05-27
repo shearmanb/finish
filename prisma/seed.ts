@@ -9,22 +9,22 @@ function slug(s: string) {
     .replace(/^_|_$/g, "");
 }
 
+type Upsertable = {
+  upsert: (args: {
+    where: { id: string };
+    update: Record<string, never>;
+    create: Record<string, unknown>;
+  }) => Promise<unknown>;
+};
+
 // Create-if-absent so re-seeding never clobbers the user's later edits.
-async function lookup(
-  model: {
-    upsert: (args: {
-      where: { id: string };
-      update: Record<string, never>;
-      create: Record<string, unknown>;
-    }) => Promise<unknown>;
-  },
-  id: string,
-  data: Record<string, unknown>,
-) {
+async function lookup(model: Upsertable, id: string, data: Record<string, unknown>) {
   await model.upsert({ where: { id }, update: {}, create: { id, ...data } });
 }
 
 async function main() {
+  // One cast: each delegate satisfies the minimal Upsertable shape above.
+  const m = prisma as unknown as Record<string, Upsertable>;
   // ---------- Distilleries ----------
   const distilleries = [
     "Buffalo Trace",
@@ -54,7 +54,7 @@ async function main() {
     "Sazerac",
   ];
   for (const [i, name] of distilleries.entries()) {
-    await lookup(prisma.distillery, `dist_${slug(name)}`, {
+    await lookup(m.distillery, `dist_${slug(name)}`, {
       name,
       sortIndex: i,
     });
@@ -71,7 +71,7 @@ async function main() {
     "Highball",
   ];
   for (const [i, name] of glassware.entries()) {
-    await lookup(prisma.glassware, `glass_${slug(name)}`, { name, sortIndex: i });
+    await lookup(m.glassware, `glass_${slug(name)}`, { name, sortIndex: i });
   }
 
   // ---------- Locations ----------
@@ -84,7 +84,7 @@ async function main() {
     "Tasting Event",
   ];
   for (const [i, name] of locations.entries()) {
-    await lookup(prisma.location, `loc_${slug(name)}`, { name, sortIndex: i });
+    await lookup(m.location, `loc_${slug(name)}`, { name, sortIndex: i });
   }
 
   // ---------- Mouthfeel ----------
@@ -102,7 +102,7 @@ async function main() {
     "Astringent",
   ];
   for (const [i, name] of mouthfeel.entries()) {
-    await lookup(prisma.mouthfeel, `mf_${slug(name)}`, { name, sortIndex: i });
+    await lookup(m.mouthfeel, `mf_${slug(name)}`, { name, sortIndex: i });
   }
 
   // ---------- Tasting phases ----------
@@ -115,7 +115,7 @@ async function main() {
     { id: "phase_water", name: "With water" },
   ];
   for (const [i, p] of phases.entries()) {
-    await lookup(prisma.tastingPhase, p.id, { name: p.name, sortIndex: i });
+    await lookup(m.tastingPhase, p.id, { name: p.name, sortIndex: i });
   }
 
   // ---------- Rating dimensions ----------
@@ -126,7 +126,7 @@ async function main() {
     { id: "dim_overall", name: "Overall" },
   ];
   for (const [i, d] of dims.entries()) {
-    await lookup(prisma.ratingDimension, d.id, {
+    await lookup(m.ratingDimension, d.id, {
       name: d.name,
       scaleType: "NUMERIC",
       minValue: 0,
@@ -151,7 +151,7 @@ async function main() {
     [10, "Perfect", "Perfect."],
   ];
   for (const [value, label, description] of t8ke) {
-    await lookup(prisma.ratingScaleAnchor, `anc_overall_${value}`, {
+    await lookup(m.ratingScaleAnchor, `anc_overall_${value}`, {
       dimensionId: "dim_overall",
       value,
       label,
@@ -237,13 +237,13 @@ async function main() {
   let catIndex = 0;
   for (const [name, parentId, flavors] of flavorTree) {
     const catId = `cat_${slug(name)}`;
-    await lookup(prisma.flavorCategory, catId, {
+    await lookup(m.flavorCategory, catId, {
       name,
       parentId,
       sortIndex: catIndex++,
     });
     for (const [i, fname] of flavors.entries()) {
-      await lookup(prisma.flavor, `fla_${slug(name)}_${slug(fname)}`, {
+      await lookup(m.flavor, `fla_${slug(name)}_${slug(fname)}`, {
         name: fname,
         categoryId: catId,
         sortIndex: i,
@@ -309,7 +309,7 @@ async function main() {
     },
   ];
   for (const [i, s] of steps.entries()) {
-    await lookup(prisma.guidedStep, s.id, {
+    await lookup(m.guidedStep, s.id, {
       phaseId: s.phaseId,
       title: s.title,
       instruction: s.instruction,
