@@ -1,12 +1,12 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Plus, Check, X } from "lucide-react";
 import type { BottleStatus } from "@prisma/client";
 import { createBottle, updateBottle } from "@/lib/actions/bottles";
-import { createStoreInline } from "@/lib/actions/lookups";
+import { createStoreInline, createSimpleLookup } from "@/lib/actions/lookups";
+import { createLineInline } from "@/lib/actions/lines";
 import type { BottleInput } from "@/lib/data/bottles";
 import { AgeStatementPicker } from "@/components/forms/age-statement-picker";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ import {
 
 type LineOption = { id: string; name: string; distilleryName: string };
 type StoreOption = { id: string; name: string };
+type DistilleryOption = { id: string; name: string };
 type BottleTypeOption = { id: string; name: string; parentId: string | null };
 type SimpleLookup = { id: string; name: string };
 
@@ -42,8 +43,9 @@ function numOrNull(s: string): number | null {
 const NONE = "__none__";
 
 export function BottleForm({
-  lines,
+  lines: initialLines,
   stores: initialStores,
+  distilleries: initialDistilleries,
   bottleTypes,
   mashBillTypes,
   finishTypes,
@@ -53,6 +55,7 @@ export function BottleForm({
 }: {
   lines: LineOption[];
   stores: StoreOption[];
+  distilleries: DistilleryOption[];
   bottleTypes: BottleTypeOption[];
   mashBillTypes: SimpleLookup[];
   finishTypes: SimpleLookup[];
@@ -70,7 +73,19 @@ export function BottleForm({
     [bottleTypes],
   );
 
+  // Lines & distilleries (editable locally so inline-created ones appear at once)
+  const [lines, setLines] = React.useState<LineOption[]>(initialLines);
+  const [distilleries, setDistilleries] =
+    React.useState<DistilleryOption[]>(initialDistilleries);
   const [lineId, setLineId] = React.useState(initial?.lineId ?? defaultLineId ?? "");
+
+  const [addingLine, setAddingLine] = React.useState(false);
+  const [newLineName, setNewLineName] = React.useState("");
+  const [newLineDistId, setNewLineDistId] = React.useState("");
+  const [addingDist, setAddingDist] = React.useState(false);
+  const [newDistName, setNewDistName] = React.useState("");
+  const [lineError, setLineError] = React.useState<string | null>(null);
+
   const [name, setName] = React.useState(initial?.name ?? "");
   const [proofVal, setProofVal] = React.useState(
     initial?.proof != null ? String(initial.proof) : "",
@@ -143,6 +158,46 @@ export function BottleForm({
 
   const proofNum = proofVal.trim() === "" ? null : Number(proofVal);
 
+  async function addDistillery() {
+    if (!newDistName.trim()) return;
+    setLineError(null);
+    const res = await createSimpleLookup("distilleries", newDistName);
+    if (!res.ok || !res.id) {
+      setLineError(res.error ?? "Could not add distillery.");
+      return;
+    }
+    const added = { id: res.id, name: newDistName.trim() };
+    setDistilleries((prev) => [...prev, added]);
+    setNewLineDistId(added.id);
+    setNewDistName("");
+    setAddingDist(false);
+  }
+
+  async function addLine() {
+    if (!newLineName.trim()) {
+      setLineError("Line name is required.");
+      return;
+    }
+    if (!newLineDistId) {
+      setLineError("Pick a distillery for the line.");
+      return;
+    }
+    setLineError(null);
+    const res = await createLineInline({
+      name: newLineName,
+      distilleryId: newLineDistId,
+    });
+    if (!res.ok || !res.line) {
+      setLineError(res.error ?? "Could not create line.");
+      return;
+    }
+    setLines((prev) => [...prev, res.line!]);
+    setLineId(res.line.id);
+    setAddingLine(false);
+    setNewLineName("");
+    setNewLineDistId("");
+  }
+
   async function addStore() {
     if (!newStoreName.trim()) return;
     setStoreError(null);
@@ -199,30 +254,118 @@ export function BottleForm({
     <Card>
       <CardContent className="space-y-5 pt-5">
 
-        {/* Line picker */}
+        {/* Line picker (with inline create) */}
         <div>
           <Label>Line</Label>
-          {lines.length === 0 ? (
-            <p className="mt-1 text-sm text-muted-foreground">
-              No lines yet.{" "}
-              <Link href="/lines/new" className="text-primary underline">
-                Create one first
-              </Link>
-              .
-            </p>
+          {addingLine ? (
+            <div className="mt-1 space-y-2 rounded-lg border border-border p-3">
+              <Input
+                value={newLineName}
+                onChange={(e) => setNewLineName(e.target.value)}
+                placeholder="Line name — e.g. Eagle Rare, Weller"
+                autoFocus
+              />
+              <div>
+                <Label className="text-xs text-muted-foreground">
+                  Distillery / Producer
+                </Label>
+                {addingDist ? (
+                  <div className="mt-1 flex items-center gap-1">
+                    <Input
+                      value={newDistName}
+                      onChange={(e) => setNewDistName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") { e.preventDefault(); addDistillery(); }
+                      }}
+                      placeholder="New distillery name"
+                      autoFocus
+                      className="flex-1"
+                    />
+                    <Button type="button" size="icon" variant="ghost" onClick={addDistillery}>
+                      <Check className="size-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => { setAddingDist(false); setNewDistName(""); }}
+                    >
+                      <X className="size-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="mt-1 flex items-center gap-1">
+                    <Select value={newLineDistId} onValueChange={setNewLineDistId}>
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="Select distillery" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {distilleries.map((d) => (
+                          <SelectItem key={d.id} value={d.id}>
+                            {d.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => setAddingDist(true)}
+                      title="Add new distillery"
+                    >
+                      <Plus className="size-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+              {lineError ? (
+                <p className="text-xs text-destructive">{lineError}</p>
+              ) : null}
+              <div className="flex gap-2">
+                <Button type="button" size="sm" onClick={addLine}>
+                  Create line
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    setAddingLine(false);
+                    setLineError(null);
+                    setNewLineName("");
+                    setNewLineDistId("");
+                    setAddingDist(false);
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
           ) : (
-            <Select value={lineId} onValueChange={setLineId}>
-              <SelectTrigger className="mt-1">
-                <SelectValue placeholder="Select line" />
-              </SelectTrigger>
-              <SelectContent>
-                {lines.map((l) => (
-                  <SelectItem key={l.id} value={l.id}>
-                    {l.name} — {l.distilleryName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="mt-1 flex items-center gap-1">
+              <Select value={lineId} onValueChange={setLineId}>
+                <SelectTrigger className="flex-1">
+                  <SelectValue placeholder="Select line" />
+                </SelectTrigger>
+                <SelectContent>
+                  {lines.map((l) => (
+                    <SelectItem key={l.id} value={l.id}>
+                      {l.name} — {l.distilleryName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                onClick={() => setAddingLine(true)}
+                title="Add new line"
+              >
+                <Plus className="size-4" />
+              </Button>
+            </div>
           )}
         </div>
 

@@ -3,6 +3,7 @@ import { BottleForm } from "@/components/forms/bottle-form";
 import { listLines } from "@/lib/data/lines";
 import {
   getActiveStores,
+  getActiveDistilleries,
   getActiveBottleTypes,
   getActiveMashBillTypes,
   getActiveFinishTypes,
@@ -14,13 +15,15 @@ export default async function NewBottlePage({
   searchParams: Promise<{ lineId?: string }>;
 }) {
   const { lineId } = await searchParams;
-  const [lines, stores, bottleTypes, mashBillTypes, finishTypes] = await Promise.all([
-    listLines(),
-    getActiveStores(),
-    getActiveBottleTypes(),
-    getActiveMashBillTypes(),
-    getActiveFinishTypes(),
-  ]);
+  const [lines, stores, distilleries, bottleTypes, mashBillTypes, finishTypes] =
+    await Promise.all([
+      listLines(),
+      getActiveStores(),
+      getActiveDistilleries(),
+      getActiveBottleTypes(),
+      getActiveMashBillTypes(),
+      getActiveFinishTypes(),
+    ]);
   return (
     <div>
       <PageHeader title="Add Bottle" backHref="/bottles" />
@@ -32,6 +35,7 @@ export default async function NewBottlePage({
           distilleryName: l.distillery.name,
         }))}
         stores={stores.map((s) => ({ id: s.id, name: s.name }))}
+        distilleries={distilleries.map((d) => ({ id: d.id, name: d.name }))}
         bottleTypes={bottleTypes.map((t) => ({
           id: t.id,
           name: t.name,

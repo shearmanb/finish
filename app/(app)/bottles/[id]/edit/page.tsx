@@ -5,6 +5,7 @@ import { getBottle } from "@/lib/data/bottles";
 import { listLines } from "@/lib/data/lines";
 import {
   getActiveStores,
+  getActiveDistilleries,
   getActiveBottleTypes,
   getActiveMashBillTypes,
   getActiveFinishTypes,
@@ -16,14 +17,16 @@ export default async function EditBottlePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [bottle, lines, stores, bottleTypes, mashBillTypes, finishTypes] = await Promise.all([
-    getBottle(id),
-    listLines(),
-    getActiveStores(),
-    getActiveBottleTypes(),
-    getActiveMashBillTypes(),
-    getActiveFinishTypes(),
-  ]);
+  const [bottle, lines, stores, distilleries, bottleTypes, mashBillTypes, finishTypes] =
+    await Promise.all([
+      getBottle(id),
+      listLines(),
+      getActiveStores(),
+      getActiveDistilleries(),
+      getActiveBottleTypes(),
+      getActiveMashBillTypes(),
+      getActiveFinishTypes(),
+    ]);
   if (!bottle) notFound();
 
   return (
@@ -37,6 +40,7 @@ export default async function EditBottlePage({
           distilleryName: l.distillery.name,
         }))}
         stores={stores.map((s) => ({ id: s.id, name: s.name }))}
+        distilleries={distilleries.map((d) => ({ id: d.id, name: d.name }))}
         bottleTypes={bottleTypes.map((t) => ({
           id: t.id,
           name: t.name,

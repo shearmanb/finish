@@ -12,6 +12,7 @@ import {
   Tag,
   Wheat,
   Flame,
+  Boxes,
   ChevronRight,
 } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
@@ -59,6 +60,12 @@ const SECTIONS = [
     title: "Finish Types",
     desc: "Port, Sherry, Madeira…",
     icon: Flame,
+  },
+  {
+    href: "/lines",
+    title: "Lines",
+    desc: "Eagle Rare, Weller… grouped by distillery.",
+    icon: Boxes,
   },
   {
     href: "/control-panel/distilleries",

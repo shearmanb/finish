@@ -30,3 +30,20 @@ export async function updateLine(id: string, input: LineInput): Promise<Result> 
   revalidatePath(`/lines/${id}`);
   redirect(`/lines/${id}`);
 }
+
+// Non-redirecting variant for inline creation (e.g. from the bottle form).
+export async function createLineInline(
+  input: LineInput,
+): Promise<Result & { line?: { id: string; name: string; distilleryName: string } }> {
+  const res = clean(input);
+  if ("error" in res) return { ok: false, error: res.error };
+  const line = await prisma.line.create({
+    data: res.data,
+    include: { distillery: true },
+  });
+  revalidatePath("/lines");
+  return {
+    ok: true,
+    line: { id: line.id, name: line.name, distilleryName: line.distillery.name },
+  };
+}
