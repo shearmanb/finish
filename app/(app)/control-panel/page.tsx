@@ -8,6 +8,7 @@ import {
   MapPin,
   Hand,
   Layers,
+  Store,
   ChevronRight,
 } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
@@ -43,6 +44,12 @@ const SECTIONS = [
     title: "Distilleries",
     desc: "Makers & brands.",
     icon: Factory,
+  },
+  {
+    href: "/control-panel/stores",
+    title: "Stores",
+    desc: "Where you buy bottles.",
+    icon: Store,
   },
   {
     href: "/control-panel/glassware",
