@@ -38,6 +38,9 @@ function numOrNull(s: string): number | null {
   return s.trim() === "" ? null : Number(s);
 }
 
+// Radix Select forbids empty-string item values; use a sentinel for "none".
+const NONE = "__none__";
+
 export function BottleForm({
   lines,
   stores: initialStores,
@@ -255,15 +258,15 @@ export function BottleForm({
           <div>
             <Label>Sub-type</Label>
             <Select
-              value={subTypeId}
-              onValueChange={setSubTypeId}
+              value={subTypeId || NONE}
+              onValueChange={(v) => setSubTypeId(v === NONE ? "" : v)}
               disabled={subTypeOptions.length === 0}
             >
               <SelectTrigger className="mt-1">
                 <SelectValue placeholder={subTypeOptions.length ? "Select…" : "—"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None</SelectItem>
+                <SelectItem value={NONE}>None</SelectItem>
                 {subTypeOptions.map((t) => (
                   <SelectItem key={t.id} value={t.id}>
                     {t.name}
@@ -339,12 +342,15 @@ export function BottleForm({
         {/* Mash bill */}
         <div>
           <Label>Mash bill</Label>
-          <Select value={mashBillId} onValueChange={setMashBillId}>
+          <Select
+            value={mashBillId || NONE}
+            onValueChange={(v) => setMashBillId(v === NONE ? "" : v)}
+          >
             <SelectTrigger className="mt-1">
               <SelectValue placeholder="Select mash bill…" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Unknown / not set</SelectItem>
+              <SelectItem value={NONE}>Unknown / not set</SelectItem>
               {mashBillTypes.map((m) => (
                 <SelectItem key={m.id} value={m.id}>
                   {m.name}
@@ -364,12 +370,15 @@ export function BottleForm({
             <span>Barrel finish</span>
           </label>
           {hasBarrelFinish ? (
-            <Select value={finishTypeId} onValueChange={setFinishTypeId}>
+            <Select
+              value={finishTypeId || NONE}
+              onValueChange={(v) => setFinishTypeId(v === NONE ? "" : v)}
+            >
               <SelectTrigger className="mt-2">
                 <SelectValue placeholder="Select finish type…" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Unknown finish type</SelectItem>
+                <SelectItem value={NONE}>Unknown finish type</SelectItem>
                 {finishTypes.map((f) => (
                   <SelectItem key={f.id} value={f.id}>
                     {f.name}

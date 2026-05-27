@@ -27,6 +27,9 @@ type TypeRow = {
   isArchived: boolean;
 };
 
+// Radix Select forbids empty-string item values; use a sentinel for "root".
+const ROOT = "__root__";
+
 export function BottleTypeManager({ items }: { items: TypeRow[] }) {
   const router = useRouter();
   const [pending, start] = React.useTransition();
@@ -92,12 +95,15 @@ export function BottleTypeManager({ items }: { items: TypeRow[] }) {
                 className="flex-1"
                 autoFocus
               />
-              <Select value={editParent} onValueChange={setEditParent}>
+              <Select
+                value={editParent || ROOT}
+                onValueChange={(v) => setEditParent(v === ROOT ? "" : v)}
+              >
                 <SelectTrigger className="w-36">
                   <SelectValue placeholder="Root type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Root type</SelectItem>
+                  <SelectItem value={ROOT}>Root type</SelectItem>
                   {rootsActive.filter((r) => r.id !== row.id).map((r) => (
                     <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
                   ))}
@@ -147,12 +153,15 @@ export function BottleTypeManager({ items }: { items: TypeRow[] }) {
               onChange={(e) => setAddName(e.target.value)}
             />
           </div>
-          <Select value={addParent} onValueChange={setAddParent}>
+          <Select
+            value={addParent || ROOT}
+            onValueChange={(v) => setAddParent(v === ROOT ? "" : v)}
+          >
             <SelectTrigger className="w-40">
               <SelectValue placeholder="Root type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Root type</SelectItem>
+              <SelectItem value={ROOT}>Root type</SelectItem>
               {rootsActive.map((r) => (
                 <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
               ))}
