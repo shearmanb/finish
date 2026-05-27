@@ -2,13 +2,12 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { createProduct, updateProduct } from "@/lib/actions/products";
+import { createLine, updateLine } from "@/lib/actions/lines";
 import { createSimpleLookup } from "@/lib/actions/lookups";
-import type { ProductInput } from "@/lib/data/products";
+import type { LineInput } from "@/lib/data/lines";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
@@ -20,14 +19,14 @@ import {
 
 type Distillery = { id: string; name: string };
 
-export function ProductForm({
+export function LineForm({
   distilleries,
   initial,
-  productId,
+  lineId,
 }: {
   distilleries: Distillery[];
-  initial?: Partial<ProductInput>;
-  productId?: string;
+  initial?: Partial<LineInput>;
+  lineId?: string;
 }) {
   const router = useRouter();
   const [pending, start] = React.useTransition();
@@ -36,17 +35,6 @@ export function ProductForm({
   const [name, setName] = React.useState(initial?.name ?? "");
   const [distilleryId, setDistilleryId] = React.useState(
     initial?.distilleryId ?? "",
-  );
-  const [proof, setProof] = React.useState(
-    initial?.proof != null ? String(initial.proof) : "",
-  );
-  const [caskStrength, setCaskStrength] = React.useState(
-    initial?.caskStrength ?? false,
-  );
-  const [category, setCategory] = React.useState(initial?.category ?? "");
-  const [mashBill, setMashBill] = React.useState(initial?.mashBill ?? "");
-  const [ageStatement, setAgeStatement] = React.useState(
-    initial?.ageStatement ?? "",
   );
 
   const [addingDist, setAddingDist] = React.useState(false);
@@ -69,42 +57,32 @@ export function ProductForm({
 
   function submit() {
     setError(null);
-    const input: ProductInput = {
-      name,
-      distilleryId,
-      proof: proof.trim() === "" ? null : Number(proof),
-      caskStrength,
-      category: category || null,
-      mashBill: mashBill || null,
-      ageStatement: ageStatement || null,
-    };
+    const input: LineInput = { name, distilleryId };
     start(async () => {
-      const res = productId
-        ? await updateProduct(productId, input)
-        : await createProduct(input);
+      const res = lineId
+        ? await updateLine(lineId, input)
+        : await createLine(input);
       if (res && !res.ok) setError(res.error ?? "Something went wrong.");
     });
   }
-
-  const proofNum = proof.trim() === "" ? null : Number(proof);
 
   return (
     <Card>
       <CardContent className="space-y-4 pt-5">
         <div>
-          <Label htmlFor="name">Expression name</Label>
+          <Label htmlFor="name">Line name</Label>
           <Input
             id="name"
             className="mt-1"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Eagle Rare 10 Year"
+            placeholder="e.g. Eagle Rare, Weller, Blanton's"
             autoFocus
           />
         </div>
 
         <div>
-          <Label>Distillery</Label>
+          <Label>Distillery / Producer</Label>
           {addingDist ? (
             <div className="mt-1 flex gap-2">
               <Input
@@ -149,68 +127,11 @@ export function ProductForm({
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <Label htmlFor="proof">Proof</Label>
-            <Input
-              id="proof"
-              className="mt-1"
-              inputMode="decimal"
-              value={proof}
-              onChange={(e) => setProof(e.target.value)}
-              placeholder="e.g. 90"
-            />
-            <p className="mt-1 text-xs text-muted-foreground">
-              {proofNum != null && !Number.isNaN(proofNum)
-                ? `${proofNum / 2}% ABV`
-                : "ABV auto-calculated"}
-            </p>
-          </div>
-          <div>
-            <Label htmlFor="category">Type / category</Label>
-            <Input
-              id="category"
-              className="mt-1"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              placeholder="Bourbon, Rye…"
-            />
-          </div>
-        </div>
-
-        <label className="flex items-center gap-3 rounded-lg border border-border p-3 text-sm">
-          <Switch checked={caskStrength} onCheckedChange={setCaskStrength} />
-          <span>Cask strength / barrel proof</span>
-        </label>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <Label htmlFor="age">Age statement</Label>
-            <Input
-              id="age"
-              className="mt-1"
-              value={ageStatement}
-              onChange={(e) => setAgeStatement(e.target.value)}
-              placeholder="10 Year, NAS…"
-            />
-          </div>
-          <div>
-            <Label htmlFor="mash">Mash bill</Label>
-            <Input
-              id="mash"
-              className="mt-1"
-              value={mashBill}
-              onChange={(e) => setMashBill(e.target.value)}
-              placeholder="75/13/12…"
-            />
-          </div>
-        </div>
-
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
         <div className="flex gap-2">
           <Button onClick={submit} disabled={pending} size="lg">
-            {productId ? "Save changes" : "Create expression"}
+            {lineId ? "Save changes" : "Create line"}
           </Button>
           <Button
             type="button"

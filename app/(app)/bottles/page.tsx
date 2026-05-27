@@ -91,10 +91,9 @@ export default async function BottlesPage({
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="truncate font-medium">{b.product.name}</div>
+                  <div className="truncate font-medium">{b.name || b.line.name}</div>
                   <div className="truncate text-sm text-muted-foreground">
-                    {b.product.distillery.name}
-                    {b.bottlingName ? ` · ${b.bottlingName}` : ""}
+                    {b.line.distillery.name} · {b.line.name}
                   </div>
                   <div className="mt-0.5 text-xs text-muted-foreground">
                     {b._count.pours} {b._count.pours === 1 ? "pour" : "pours"}

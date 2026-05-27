@@ -29,10 +29,9 @@ export default async function NewPourPage() {
           {bottles.map((b) => (
             <Card key={b.id} className="p-3">
               <div className="mb-2">
-                <div className="font-medium">{b.product.name}</div>
+                <div className="font-medium">{b.name || b.line.name}</div>
                 <div className="text-sm text-muted-foreground">
-                  {b.product.distillery.name}
-                  {b.bottlingName ? ` · ${b.bottlingName}` : ""}
+                  {b.line.distillery.name} · {b.line.name}
                 </div>
               </div>
               <div className="flex gap-2">

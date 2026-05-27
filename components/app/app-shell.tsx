@@ -25,7 +25,7 @@ const NAV = [
 const SIDEBAR = [
   { href: "/", label: "Dashboard", icon: Home, exact: true },
   { href: "/bottles", label: "Bottles", icon: Wine },
-  { href: "/products", label: "Expressions", icon: Boxes },
+  { href: "/lines", label: "Lines", icon: Boxes },
   { href: "/wishlist", label: "Wishlist", icon: Star },
   { href: "/control-panel", label: "Control Panel", icon: SlidersHorizontal },
 ];

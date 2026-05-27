@@ -10,7 +10,7 @@ export default async function WishlistPage() {
       <WishlistManager
         items={items.map((i) => ({
           id: i.id,
-          name: i.freeTextName ?? i.product?.name ?? "Untitled",
+          name: i.freeTextName ?? i.line?.name ?? "Untitled",
           targetPrice: i.targetPrice ? i.targetPrice.toString() : null,
           notes: i.notes,
           acquired: i.acquired,

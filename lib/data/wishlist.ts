@@ -5,6 +5,6 @@ export async function listWishlist() {
   return prisma.wishlistItem.findMany({
     where: { isArchived: false },
     orderBy: [{ acquired: "asc" }, { priority: "desc" }, { createdAt: "asc" }],
-    include: { product: { include: { distillery: true } } },
+    include: { line: { include: { distillery: true } } },
   });
 }

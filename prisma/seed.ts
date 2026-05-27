@@ -74,6 +74,19 @@ async function main() {
     await lookup(m.glassware, `glass_${slug(name)}`, { name, sortIndex: i });
   }
 
+  // ---------- Stores ----------
+  const stores = [
+    "VABC",
+    "Online",
+    "SharedPour",
+    "T8ke Lottery",
+    "Total Wine",
+    "Local Liquor Store",
+  ];
+  for (const [i, name] of stores.entries()) {
+    await lookup(m.store, `store_${slug(name)}`, { name, sortIndex: i });
+  }
+
   // ---------- Locations ----------
   const locations = [
     "Home",

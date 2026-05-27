@@ -66,7 +66,7 @@ export default async function PourDetailPage({
   return (
     <div>
       <PageHeader
-        title={`${pour.bottle.product.name} · Pour #${pour.pourNumber}`}
+        title={`${pour.bottle.name || pour.bottle.line.name} · Pour #${pour.pourNumber}`}
         subtitle={`${formatDate(pour.pouredAt)}${pour.isGuided ? " · Guided tasting" : ""}`}
         backHref={`/bottles/${pour.bottleId}`}
         action={

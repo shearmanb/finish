@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
@@ -19,7 +20,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-type ProductOption = { id: string; name: string; distilleryName: string };
+type LineOption = { id: string; name: string; distilleryName: string };
+type StoreOption = { id: string; name: string };
 
 const STATUSES: { value: BottleStatus; label: string }[] = [
   { value: "SEALED", label: "Sealed" },
@@ -32,25 +34,48 @@ function numOrNull(s: string): number | null {
 }
 
 export function BottleForm({
-  products,
+  lines,
+  stores,
   initial,
   bottleId,
-  defaultProductId,
+  defaultLineId,
 }: {
-  products: ProductOption[];
+  lines: LineOption[];
+  stores: StoreOption[];
   initial?: Partial<BottleInput>;
   bottleId?: string;
-  defaultProductId?: string;
+  defaultLineId?: string;
 }) {
   const router = useRouter();
   const [pending, start] = React.useTransition();
   const [error, setError] = React.useState<string | null>(null);
 
-  const [productId, setProductId] = React.useState(
-    initial?.productId ?? defaultProductId ?? "",
+  const [lineId, setLineId] = React.useState(
+    initial?.lineId ?? defaultLineId ?? "",
   );
-  const [bottlingName, setBottlingName] = React.useState(
-    initial?.bottlingName ?? "",
+  const [name, setName] = React.useState(initial?.name ?? "");
+  const [proofVal, setProofVal] = React.useState(
+    initial?.proof != null ? String(initial.proof) : "",
+  );
+  const [singleBarrel, setSingleBarrel] = React.useState(
+    initial?.singleBarrel ?? false,
+  );
+  const [caskStrength, setCaskStrength] = React.useState(
+    initial?.caskStrength ?? false,
+  );
+  const [category, setCategory] = React.useState(initial?.category ?? "");
+  const [mashBill, setMashBill] = React.useState(initial?.mashBill ?? "");
+  const [ageStatement, setAgeStatement] = React.useState(
+    initial?.ageStatement ?? "",
+  );
+  const [release, setRelease] = React.useState(initial?.release ?? "");
+  const [t8kePick, setT8kePick] = React.useState(initial?.t8kePick ?? false);
+  const [bottleNumber, setBottleNumber] = React.useState(
+    initial?.bottleNumber ?? "",
+  );
+  const [finish, setFinish] = React.useState(initial?.finish ?? "");
+  const [producerNotes, setProducerNotes] = React.useState(
+    initial?.producerNotes ?? "",
   );
   const [status, setStatus] = React.useState<BottleStatus>(
     initial?.status ?? "SEALED",
@@ -61,7 +86,7 @@ export function BottleForm({
   const [purchaseDate, setPurchaseDate] = React.useState(
     initial?.purchaseDate ?? "",
   );
-  const [store, setStore] = React.useState(initial?.store ?? "");
+  const [storeId, setStoreId] = React.useState(initial?.storeId ?? "");
   const [pricePaid, setPricePaid] = React.useState(
     initial?.pricePaid != null ? String(initial.pricePaid) : "",
   );
@@ -73,15 +98,28 @@ export function BottleForm({
   );
   const [notes, setNotes] = React.useState(initial?.notes ?? "");
 
+  const proofNum = proofVal.trim() === "" ? null : Number(proofVal);
+
   function submit() {
     setError(null);
     const input: BottleInput = {
-      productId,
-      bottlingName: bottlingName || null,
+      lineId,
+      name: name || null,
+      proof: numOrNull(proofVal),
+      singleBarrel,
+      caskStrength,
+      category: category || null,
+      mashBill: mashBill || null,
+      ageStatement: ageStatement || null,
+      release: release || null,
+      t8kePick,
+      bottleNumber: bottleNumber || null,
+      finish: finish || null,
+      producerNotes: producerNotes || null,
       status,
       fillLevel: numOrNull(fillLevel),
       purchaseDate: purchaseDate || null,
-      store: store || null,
+      storeId: storeId || null,
       pricePaid: numOrNull(pricePaid),
       msrp: numOrNull(msrp),
       storageLocation: storageLocation || null,
@@ -98,25 +136,27 @@ export function BottleForm({
   return (
     <Card>
       <CardContent className="space-y-4 pt-5">
+
+        {/* Line picker */}
         <div>
-          <Label>Expression</Label>
-          {products.length === 0 ? (
+          <Label>Line</Label>
+          {lines.length === 0 ? (
             <p className="mt-1 text-sm text-muted-foreground">
-              No expressions yet.{" "}
-              <Link href="/products/new" className="text-primary underline">
+              No lines yet.{" "}
+              <Link href="/lines/new" className="text-primary underline">
                 Create one first
               </Link>
               .
             </p>
           ) : (
-            <Select value={productId} onValueChange={setProductId}>
+            <Select value={lineId} onValueChange={setLineId}>
               <SelectTrigger className="mt-1">
-                <SelectValue placeholder="Select expression" />
+                <SelectValue placeholder="Select line" />
               </SelectTrigger>
               <SelectContent>
-                {products.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.name} — {p.distilleryName}
+                {lines.map((l) => (
+                  <SelectItem key={l.id} value={l.id}>
+                    {l.name} — {l.distilleryName}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -124,17 +164,144 @@ export function BottleForm({
           )}
         </div>
 
+        {/* Bottle name */}
         <div>
-          <Label htmlFor="bottling">Bottling / pick name (optional)</Label>
+          <Label htmlFor="bottleName">Bottle name (optional)</Label>
           <Input
-            id="bottling"
+            id="bottleName"
             className="mt-1"
-            value={bottlingName}
-            onChange={(e) => setBottlingName(e.target.value)}
-            placeholder="Single barrel #, store pick name…"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. Eagle Rare 10 Year, Single Barrel #1234"
           />
         </div>
 
+        {/* Proof / ABV */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label htmlFor="proof">Proof</Label>
+            <Input
+              id="proof"
+              className="mt-1"
+              inputMode="decimal"
+              value={proofVal}
+              onChange={(e) => setProofVal(e.target.value)}
+              placeholder="e.g. 90"
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              {proofNum != null && !Number.isNaN(proofNum)
+                ? `${proofNum / 2}% ABV`
+                : "ABV auto-calculated"}
+            </p>
+          </div>
+          <div>
+            <Label htmlFor="abv">ABV %</Label>
+            <Input
+              id="abv"
+              className="mt-1"
+              inputMode="decimal"
+              value={
+                proofNum != null && !Number.isNaN(proofNum)
+                  ? String(proofNum / 2)
+                  : ""
+              }
+              onChange={(e) => {
+                const v = e.target.value.trim();
+                setProofVal(v === "" ? "" : String(Number(v) * 2));
+              }}
+              placeholder="e.g. 45"
+            />
+          </div>
+        </div>
+
+        {/* Flags */}
+        <div className="space-y-2">
+          <label className="flex items-center gap-3 rounded-lg border border-border p-3 text-sm">
+            <Switch checked={singleBarrel} onCheckedChange={setSingleBarrel} />
+            <span>Single barrel</span>
+          </label>
+          <label className="flex items-center gap-3 rounded-lg border border-border p-3 text-sm">
+            <Switch checked={caskStrength} onCheckedChange={setCaskStrength} />
+            <span>Cask strength / barrel proof</span>
+          </label>
+          <label className="flex items-center gap-3 rounded-lg border border-border p-3 text-sm">
+            <Switch checked={t8kePick} onCheckedChange={setT8kePick} />
+            <span>T8ke pick</span>
+          </label>
+        </div>
+
+        {/* Category, age, mash bill */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label htmlFor="category">Type / category</Label>
+            <Input
+              id="category"
+              className="mt-1"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              placeholder="Bourbon, Rye…"
+            />
+          </div>
+          <div>
+            <Label htmlFor="age">Age statement</Label>
+            <Input
+              id="age"
+              className="mt-1"
+              value={ageStatement}
+              onChange={(e) => setAgeStatement(e.target.value)}
+              placeholder="10 Year, NAS…"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label htmlFor="mash">Mash bill</Label>
+            <Input
+              id="mash"
+              className="mt-1"
+              value={mashBill}
+              onChange={(e) => setMashBill(e.target.value)}
+              placeholder="75/13/12…"
+            />
+          </div>
+          <div>
+            <Label htmlFor="finish">Finish (barrel type)</Label>
+            <Input
+              id="finish"
+              className="mt-1"
+              value={finish}
+              onChange={(e) => setFinish(e.target.value)}
+              placeholder="Port, Honey Barrel…"
+            />
+          </div>
+        </div>
+
+        {/* Release & bottle # */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label htmlFor="release">Release</Label>
+            <Input
+              id="release"
+              className="mt-1"
+              value={release}
+              onChange={(e) => setRelease(e.target.value)}
+              placeholder="2024 BTAC, Spring…"
+            />
+          </div>
+          <div>
+            <Label htmlFor="bottleNumber">Bottle #</Label>
+            <Input
+              id="bottleNumber"
+              className="mt-1"
+              value={bottleNumber}
+              onChange={(e) => setBottleNumber(e.target.value)}
+              placeholder="1234 / 5000"
+            />
+          </div>
+        </div>
+
+        {/* Status & fill */}
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label>Status</Label>
@@ -167,6 +334,7 @@ export function BottleForm({
           </div>
         </div>
 
+        {/* Purchase details */}
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label htmlFor="purchaseDate">Date bought</Label>
@@ -179,14 +347,19 @@ export function BottleForm({
             />
           </div>
           <div>
-            <Label htmlFor="store">Store</Label>
-            <Input
-              id="store"
-              className="mt-1"
-              value={store}
-              onChange={(e) => setStore(e.target.value)}
-              placeholder="Where you bought it"
-            />
+            <Label>Store</Label>
+            <Select value={storeId} onValueChange={setStoreId}>
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder="Select store" />
+              </SelectTrigger>
+              <SelectContent>
+                {stores.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
@@ -226,13 +399,26 @@ export function BottleForm({
           />
         </div>
 
+        {/* Notes */}
         <div>
-          <Label htmlFor="notes">Notes (optional)</Label>
+          <Label htmlFor="notes">Notes / special (optional)</Label>
           <Textarea
             id="notes"
             className="mt-1"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
+            placeholder="Personal notes about this bottle…"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="producerNotes">Producer tasting notes (optional)</Label>
+          <Textarea
+            id="producerNotes"
+            className="mt-1"
+            value={producerNotes}
+            onChange={(e) => setProducerNotes(e.target.value)}
+            placeholder="Official notes from the distillery…"
           />
         </div>
 
@@ -241,7 +427,7 @@ export function BottleForm({
         <div className="flex gap-2">
           <Button
             onClick={submit}
-            disabled={pending || !productId}
+            disabled={pending || !lineId}
             size="lg"
           >
             {bottleId ? "Save changes" : "Add bottle"}

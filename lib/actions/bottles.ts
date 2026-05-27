@@ -8,19 +8,32 @@ import type { BottleInput } from "@/lib/data/bottles";
 type Result = { ok: boolean; error?: string };
 
 function clean(input: BottleInput) {
-  if (!input.productId) return { error: "Pick an expression." as const };
+  if (!input.lineId) return { error: "Pick a line." as const };
   const fill =
     input.fillLevel === null || Number.isNaN(input.fillLevel)
       ? null
       : Math.max(0, Math.min(100, Math.round(input.fillLevel)));
+  const proof =
+    input.proof === null || Number.isNaN(input.proof) ? null : input.proof;
   return {
     data: {
-      productId: input.productId,
-      bottlingName: input.bottlingName?.trim() || null,
+      lineId: input.lineId,
+      name: input.name?.trim() || null,
+      proof,
+      singleBarrel: input.singleBarrel,
+      caskStrength: input.caskStrength,
+      category: input.category?.trim() || null,
+      mashBill: input.mashBill?.trim() || null,
+      ageStatement: input.ageStatement?.trim() || null,
+      release: input.release?.trim() || null,
+      t8kePick: input.t8kePick,
+      bottleNumber: input.bottleNumber?.trim() || null,
+      finish: input.finish?.trim() || null,
+      producerNotes: input.producerNotes?.trim() || null,
       status: input.status,
       fillLevel: fill,
       purchaseDate: input.purchaseDate ? new Date(input.purchaseDate) : null,
-      store: input.store?.trim() || null,
+      storeId: input.storeId || null,
       pricePaid: input.pricePaid ?? null,
       msrp: input.msrp ?? null,
       storageLocation: input.storageLocation?.trim() || null,

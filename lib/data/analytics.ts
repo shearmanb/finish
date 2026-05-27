@@ -8,13 +8,13 @@ export async function getDashboard() {
     where: { OR: [{ id: "dim_overall" }, { name: "Overall" }] },
   });
 
-  const [statusGroups, bottleTotal, priceAgg, poursCount, productsCount] =
+  const [statusGroups, bottleTotal, priceAgg, poursCount, linesCount] =
     await Promise.all([
       prisma.bottle.groupBy({ by: ["status"], _count: { _all: true } }),
       prisma.bottle.count(),
       prisma.bottle.aggregate({ _sum: { pricePaid: true } }),
       prisma.pour.count(),
-      prisma.product.count(),
+      prisma.line.count(),
     ]);
 
   const statusCounts = { SEALED: 0, OPEN: 0, FINISHED: 0 } as Record<
@@ -30,7 +30,7 @@ export async function getDashboard() {
           pour: {
             include: {
               bottle: {
-                include: { product: { include: { distillery: true } } },
+                include: { line: { include: { distillery: true } } },
               },
             },
           },
@@ -45,15 +45,15 @@ export async function getDashboard() {
     .map((r) => ({
       pourId: r.pourId,
       value: r.value,
-      productName: r.pour.bottle.product.name,
-      distillery: r.pour.bottle.product.distillery.name,
+      productName: r.pour.bottle.line.name,
+      distillery: r.pour.bottle.line.distillery.name,
       pourNumber: r.pour.pourNumber,
     }));
 
   // Average Overall by distillery
   const distMap = new Map<string, { sum: number; n: number }>();
   for (const r of overallRatings) {
-    const key = r.pour.bottle.product.distillery.name;
+    const key = r.pour.bottle.line.distillery.name;
     const cur = distMap.get(key) ?? { sum: 0, n: 0 };
     cur.sum += r.value;
     cur.n += 1;
@@ -77,7 +77,7 @@ export async function getDashboard() {
     const cur = valueMap.get(key);
     if (!cur || r.value > cur.bestOverall) {
       valueMap.set(key, {
-        name: r.pour.bottle.product.name,
+        name: r.pour.bottle.line.name,
         bestOverall: r.value,
         price: p,
       });
@@ -110,13 +110,13 @@ export async function getDashboard() {
     orderBy: { pouredAt: "desc" },
     take: 6,
     include: {
-      bottle: { include: { product: true } },
+      bottle: { include: { line: true } },
       ratings: { include: { dimension: true } },
     },
   });
   const recent = recentRaw.map((p) => ({
     id: p.id,
-    productName: p.bottle.product.name,
+    productName: p.bottle.line.name,
     pourNumber: p.pourNumber,
     pouredAt: p.pouredAt,
     overall:
@@ -130,7 +130,7 @@ export async function getDashboard() {
       open: statusCounts.OPEN,
       finished: statusCounts.FINISHED,
       pours: poursCount,
-      expressions: productsCount,
+      expressions: linesCount,
     },
     collectionValue: priceAgg._sum.pricePaid
       ? Number(priceAgg._sum.pricePaid)

@@ -21,7 +21,7 @@ export default async function QuickPourPage({
     <div>
       <PageHeader
         title="Quick Log"
-        subtitle={`${bottle.product.name} · ${bottle.product.distillery.name}`}
+        subtitle={`${bottle.line.name} · ${bottle.line.distillery.name}`}
         backHref={`/bottles/${bottleId}`}
       />
       <QuickPourForm bottleId={bottleId} data={data} />

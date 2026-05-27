@@ -11,6 +11,7 @@ type LookupDelegate = {
 
 export type SimpleLookupKey =
   | "distilleries"
+  | "stores"
   | "glassware"
   | "locations"
   | "mouthfeel"
@@ -25,6 +26,12 @@ type SimpleConfig = {
 };
 
 export const SIMPLE_LOOKUPS: Record<SimpleLookupKey, SimpleConfig> = {
+  stores: {
+    key: "stores",
+    label: "Stores",
+    singular: "Store",
+    delegate: () => prisma.store as unknown as LookupDelegate,
+  },
   distilleries: {
     key: "distilleries",
     label: "Distilleries",
@@ -77,6 +84,13 @@ export async function listLookup(key: SimpleLookupKey): Promise<LookupRow[]> {
 
 export async function getActiveDistilleries() {
   return prisma.distillery.findMany({
+    where: { isArchived: false },
+    orderBy: [{ sortIndex: "asc" }, { name: "asc" }],
+  });
+}
+
+export async function getActiveStores() {
+  return prisma.store.findMany({
     where: { isArchived: false },
     orderBy: [{ sortIndex: "asc" }, { name: "asc" }],
   });

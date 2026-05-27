@@ -76,7 +76,7 @@ export async function getPourEditorData(): Promise<PourEditorData> {
 export async function getBottleHeader(id: string) {
   return prisma.bottle.findUnique({
     where: { id },
-    include: { product: { include: { distillery: true } } },
+    include: { line: { include: { distillery: true } } },
   });
 }
 
@@ -84,7 +84,7 @@ export async function getPour(id: string) {
   return prisma.pour.findUnique({
     where: { id },
     include: {
-      bottle: { include: { product: { include: { distillery: true } } } },
+      bottle: { include: { line: { include: { distillery: true } } } },
       glassware: true,
       location: true,
       notes: { include: { phase: true } },

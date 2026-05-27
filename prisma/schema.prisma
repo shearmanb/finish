@@ -45,14 +45,24 @@ enum Intensity {
 // ---------- Lookups ----------
 
 model Distillery {
-  id         String    @id @default(cuid())
-  name       String    @unique
+  id         String   @id @default(cuid())
+  name       String   @unique
   region     String?
-  sortIndex  Int       @default(0)
-  isArchived Boolean   @default(false)
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  products   Product[]
+  sortIndex  Int      @default(0)
+  isArchived Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  lines      Line[]
+}
+
+model Store {
+  id         String   @id @default(cuid())
+  name       String   @unique
+  sortIndex  Int      @default(0)
+  isArchived Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  bottles    Bottle[]
 }
 
 model Glassware {
@@ -169,19 +179,13 @@ model GuidedStep {
   @@index([phaseId])
 }
 
-// ---------- Records: Product -> Bottle -> Pour ----------
+// ---------- Records: Line -> Bottle -> Pour ----------
 
-model Product {
+model Line {
   id           String         @id @default(cuid())
   name         String
   distilleryId String
   distillery   Distillery     @relation(fields: [distilleryId], references: [id])
-  proof        Float? // source of truth
-  abv          Float? // derived from proof (proof / 2)
-  caskStrength Boolean        @default(false)
-  category     String?
-  mashBill     String?
-  ageStatement String?
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
   bottles      Bottle[]
@@ -191,26 +195,38 @@ model Product {
 }
 
 model Bottle {
-  id           String        @id @default(cuid())
-  productId    String
-  product      Product       @relation(fields: [productId], references: [id])
-  bottlingName String? // single-barrel / store-pick / specific bottling
-  status       BottleStatus  @default(SEALED)
-  fillLevel    Int? // 0-100 percent remaining
-  purchaseDate DateTime?
-  store        String?
-  pricePaid    Decimal?      @db.Decimal(10, 2)
-  msrp         Decimal?      @db.Decimal(10, 2)
+  id              String        @id @default(cuid())
+  lineId          String
+  line            Line          @relation(fields: [lineId], references: [id])
+  name            String? // specific bottle name / bottling name
+  proof           Decimal?      @db.Decimal(6, 2)
+  singleBarrel    Boolean       @default(false)
+  caskStrength    Boolean       @default(false)
+  category        String?
+  mashBill        String?
+  ageStatement    String?
+  release         String? // special release label
+  t8kePick        Boolean       @default(false)
+  bottleNumber    String? // optional bottle/barrel number
+  finish          String? // barrel finish (e.g. "Port Barrel")
+  producerNotes   String? // official producer tasting notes
+  status          BottleStatus  @default(SEALED)
+  fillLevel       Int? // 0-100 percent remaining
+  purchaseDate    DateTime?
+  storeId         String?
+  store           Store?        @relation(fields: [storeId], references: [id])
+  pricePaid       Decimal?      @db.Decimal(10, 2)
+  msrp            Decimal?      @db.Decimal(10, 2)
   storageLocation String?
-  openedAt     DateTime?
-  finishedAt   DateTime?
-  notes        String?
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  photos       BottlePhoto[]
-  pours        Pour[]
+  notes           String?
+  openedAt        DateTime?
+  finishedAt      DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  photos          BottlePhoto[]
+  pours           Pour[]
 
-  @@index([productId])
+  @@index([lineId])
   @@index([status])
 }
 
@@ -308,8 +324,8 @@ model PourRating {
 
 model WishlistItem {
   id           String   @id @default(cuid())
-  productId    String?
-  product      Product? @relation(fields: [productId], references: [id])
+  lineId       String?
+  line         Line?    @relation(fields: [lineId], references: [id])
   freeTextName String?
   notes        String?
   priority     Int      @default(0)

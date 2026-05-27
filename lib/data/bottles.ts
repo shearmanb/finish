@@ -7,7 +7,7 @@ export async function listBottles(opts?: { status?: BottleStatus }) {
     where: opts?.status ? { status: opts.status } : undefined,
     orderBy: [{ createdAt: "desc" }],
     include: {
-      product: { include: { distillery: true } },
+      line: { include: { distillery: true } },
       photos: { orderBy: { sortIndex: "asc" }, take: 1 },
       _count: { select: { pours: true } },
     },
@@ -18,7 +18,8 @@ export async function getBottle(id: string) {
   return prisma.bottle.findUnique({
     where: { id },
     include: {
-      product: { include: { distillery: true } },
+      line: { include: { distillery: true } },
+      store: true,
       photos: { orderBy: { sortIndex: "asc" } },
       pours: {
         orderBy: { pourNumber: "desc" },
@@ -33,12 +34,23 @@ export async function getBottle(id: string) {
 }
 
 export type BottleInput = {
-  productId: string;
-  bottlingName: string | null;
+  lineId: string;
+  name: string | null;
+  proof: number | null;
+  singleBarrel: boolean;
+  caskStrength: boolean;
+  category: string | null;
+  mashBill: string | null;
+  ageStatement: string | null;
+  release: string | null;
+  t8kePick: boolean;
+  bottleNumber: string | null;
+  finish: string | null;
+  producerNotes: string | null;
   status: BottleStatus;
   fillLevel: number | null;
   purchaseDate: string | null; // yyyy-mm-dd
-  store: string | null;
+  storeId: string | null;
   pricePaid: number | null;
   msrp: number | null;
   storageLocation: string | null;

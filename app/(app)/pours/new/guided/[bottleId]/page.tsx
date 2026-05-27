@@ -19,7 +19,7 @@ export default async function GuidedPourPage({
     <div>
       <PageHeader
         title="Guided Tasting"
-        subtitle={`${bottle.product.name} · ${bottle.product.distillery.name}`}
+        subtitle={`${bottle.line.name} · ${bottle.line.distillery.name}`}
         backHref={`/bottles/${bottleId}`}
       />
       <GuidedTasting bottleId={bottleId} data={data} />

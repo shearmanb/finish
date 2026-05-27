@@ -27,6 +27,18 @@ CREATE TABLE "Distillery" (
 );
 
 -- CreateTable
+CREATE TABLE "Store" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "sortIndex" INTEGER NOT NULL DEFAULT 0,
+    "isArchived" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Store_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Glassware" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
@@ -144,37 +156,42 @@ CREATE TABLE "GuidedStep" (
 );
 
 -- CreateTable
-CREATE TABLE "Product" (
+CREATE TABLE "Line" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "distilleryId" TEXT NOT NULL,
-    "proof" DOUBLE PRECISION,
-    "abv" DOUBLE PRECISION,
-    "caskStrength" BOOLEAN NOT NULL DEFAULT false,
-    "category" TEXT,
-    "mashBill" TEXT,
-    "ageStatement" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "Product_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "Line_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "Bottle" (
     "id" TEXT NOT NULL,
-    "productId" TEXT NOT NULL,
-    "bottlingName" TEXT,
+    "lineId" TEXT NOT NULL,
+    "name" TEXT,
+    "proof" DECIMAL(6,2),
+    "singleBarrel" BOOLEAN NOT NULL DEFAULT false,
+    "caskStrength" BOOLEAN NOT NULL DEFAULT false,
+    "category" TEXT,
+    "mashBill" TEXT,
+    "ageStatement" TEXT,
+    "release" TEXT,
+    "t8kePick" BOOLEAN NOT NULL DEFAULT false,
+    "bottleNumber" TEXT,
+    "finish" TEXT,
+    "producerNotes" TEXT,
     "status" "BottleStatus" NOT NULL DEFAULT 'SEALED',
     "fillLevel" INTEGER,
     "purchaseDate" TIMESTAMP(3),
-    "store" TEXT,
+    "storeId" TEXT,
     "pricePaid" DECIMAL(10,2),
     "msrp" DECIMAL(10,2),
     "storageLocation" TEXT,
+    "notes" TEXT,
     "openedAt" TIMESTAMP(3),
     "finishedAt" TIMESTAMP(3),
-    "notes" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -257,7 +274,7 @@ CREATE TABLE "PourRating" (
 -- CreateTable
 CREATE TABLE "WishlistItem" (
     "id" TEXT NOT NULL,
-    "productId" TEXT,
+    "lineId" TEXT,
     "freeTextName" TEXT,
     "notes" TEXT,
     "priority" INTEGER NOT NULL DEFAULT 0,
@@ -273,144 +290,54 @@ CREATE TABLE "WishlistItem" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Distillery_name_key" ON "Distillery"("name");
-
--- CreateIndex
+CREATE UNIQUE INDEX "Store_name_key" ON "Store"("name");
 CREATE UNIQUE INDEX "Glassware_name_key" ON "Glassware"("name");
-
--- CreateIndex
 CREATE UNIQUE INDEX "Location_name_key" ON "Location"("name");
-
--- CreateIndex
 CREATE UNIQUE INDEX "Mouthfeel_name_key" ON "Mouthfeel"("name");
-
--- CreateIndex
 CREATE UNIQUE INDEX "TastingPhase_name_key" ON "TastingPhase"("name");
-
--- CreateIndex
 CREATE UNIQUE INDEX "RatingDimension_name_key" ON "RatingDimension"("name");
-
--- CreateIndex
-CREATE INDEX "RatingScaleAnchor_dimensionId_idx" ON "RatingScaleAnchor"("dimensionId");
-
--- CreateIndex
 CREATE UNIQUE INDEX "RatingScaleAnchor_dimensionId_value_key" ON "RatingScaleAnchor"("dimensionId", "value");
-
--- CreateIndex
+CREATE INDEX "RatingScaleAnchor_dimensionId_idx" ON "RatingScaleAnchor"("dimensionId");
 CREATE INDEX "FlavorCategory_parentId_idx" ON "FlavorCategory"("parentId");
-
--- CreateIndex
 CREATE INDEX "Flavor_categoryId_idx" ON "Flavor"("categoryId");
-
--- CreateIndex
 CREATE INDEX "GuidedStep_phaseId_idx" ON "GuidedStep"("phaseId");
-
--- CreateIndex
-CREATE INDEX "Product_distilleryId_idx" ON "Product"("distilleryId");
-
--- CreateIndex
-CREATE INDEX "Bottle_productId_idx" ON "Bottle"("productId");
-
--- CreateIndex
+CREATE INDEX "Line_distilleryId_idx" ON "Line"("distilleryId");
+CREATE INDEX "Bottle_lineId_idx" ON "Bottle"("lineId");
 CREATE INDEX "Bottle_status_idx" ON "Bottle"("status");
-
--- CreateIndex
 CREATE INDEX "BottlePhoto_bottleId_idx" ON "BottlePhoto"("bottleId");
-
--- CreateIndex
-CREATE INDEX "Pour_bottleId_idx" ON "Pour"("bottleId");
-
--- CreateIndex
-CREATE INDEX "Pour_pouredAt_idx" ON "Pour"("pouredAt");
-
--- CreateIndex
 CREATE UNIQUE INDEX "Pour_bottleId_pourNumber_key" ON "Pour"("bottleId", "pourNumber");
-
--- CreateIndex
-CREATE INDEX "PourPhaseNote_pourId_idx" ON "PourPhaseNote"("pourId");
-
--- CreateIndex
+CREATE INDEX "Pour_bottleId_idx" ON "Pour"("bottleId");
+CREATE INDEX "Pour_pouredAt_idx" ON "Pour"("pouredAt");
 CREATE UNIQUE INDEX "PourPhaseNote_pourId_phaseId_key" ON "PourPhaseNote"("pourId", "phaseId");
-
--- CreateIndex
-CREATE INDEX "PourFlavor_pourId_idx" ON "PourFlavor"("pourId");
-
--- CreateIndex
-CREATE INDEX "PourFlavor_flavorId_idx" ON "PourFlavor"("flavorId");
-
--- CreateIndex
+CREATE INDEX "PourPhaseNote_pourId_idx" ON "PourPhaseNote"("pourId");
 CREATE UNIQUE INDEX "PourFlavor_pourId_phaseId_flavorId_key" ON "PourFlavor"("pourId", "phaseId", "flavorId");
-
--- CreateIndex
-CREATE INDEX "PourMouthfeel_pourId_idx" ON "PourMouthfeel"("pourId");
-
--- CreateIndex
+CREATE INDEX "PourFlavor_pourId_idx" ON "PourFlavor"("pourId");
+CREATE INDEX "PourFlavor_flavorId_idx" ON "PourFlavor"("flavorId");
 CREATE UNIQUE INDEX "PourMouthfeel_pourId_mouthfeelId_key" ON "PourMouthfeel"("pourId", "mouthfeelId");
-
--- CreateIndex
-CREATE INDEX "PourRating_pourId_idx" ON "PourRating"("pourId");
-
--- CreateIndex
-CREATE INDEX "PourRating_dimensionId_idx" ON "PourRating"("dimensionId");
-
--- CreateIndex
+CREATE INDEX "PourMouthfeel_pourId_idx" ON "PourMouthfeel"("pourId");
 CREATE UNIQUE INDEX "PourRating_pourId_dimensionId_key" ON "PourRating"("pourId", "dimensionId");
+CREATE INDEX "PourRating_pourId_idx" ON "PourRating"("pourId");
+CREATE INDEX "PourRating_dimensionId_idx" ON "PourRating"("dimensionId");
 
 -- AddForeignKey
 ALTER TABLE "RatingScaleAnchor" ADD CONSTRAINT "RatingScaleAnchor_dimensionId_fkey" FOREIGN KEY ("dimensionId") REFERENCES "RatingDimension"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "FlavorCategory" ADD CONSTRAINT "FlavorCategory_parentId_fkey" FOREIGN KEY ("parentId") REFERENCES "FlavorCategory"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "Flavor" ADD CONSTRAINT "Flavor_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "FlavorCategory"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "GuidedStep" ADD CONSTRAINT "GuidedStep_phaseId_fkey" FOREIGN KEY ("phaseId") REFERENCES "TastingPhase"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Product" ADD CONSTRAINT "Product_distilleryId_fkey" FOREIGN KEY ("distilleryId") REFERENCES "Distillery"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Bottle" ADD CONSTRAINT "Bottle_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
+ALTER TABLE "Line" ADD CONSTRAINT "Line_distilleryId_fkey" FOREIGN KEY ("distilleryId") REFERENCES "Distillery"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Bottle" ADD CONSTRAINT "Bottle_lineId_fkey" FOREIGN KEY ("lineId") REFERENCES "Line"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Bottle" ADD CONSTRAINT "Bottle_storeId_fkey" FOREIGN KEY ("storeId") REFERENCES "Store"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 ALTER TABLE "BottlePhoto" ADD CONSTRAINT "BottlePhoto_bottleId_fkey" FOREIGN KEY ("bottleId") REFERENCES "Bottle"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "Pour" ADD CONSTRAINT "Pour_bottleId_fkey" FOREIGN KEY ("bottleId") REFERENCES "Bottle"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "Pour" ADD CONSTRAINT "Pour_locationId_fkey" FOREIGN KEY ("locationId") REFERENCES "Location"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "Pour" ADD CONSTRAINT "Pour_glasswareId_fkey" FOREIGN KEY ("glasswareId") REFERENCES "Glassware"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "PourPhaseNote" ADD CONSTRAINT "PourPhaseNote_pourId_fkey" FOREIGN KEY ("pourId") REFERENCES "Pour"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "PourPhaseNote" ADD CONSTRAINT "PourPhaseNote_phaseId_fkey" FOREIGN KEY ("phaseId") REFERENCES "TastingPhase"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "PourFlavor" ADD CONSTRAINT "PourFlavor_pourId_fkey" FOREIGN KEY ("pourId") REFERENCES "Pour"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "PourFlavor" ADD CONSTRAINT "PourFlavor_phaseId_fkey" FOREIGN KEY ("phaseId") REFERENCES "TastingPhase"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "PourFlavor" ADD CONSTRAINT "PourFlavor_flavorId_fkey" FOREIGN KEY ("flavorId") REFERENCES "Flavor"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "PourMouthfeel" ADD CONSTRAINT "PourMouthfeel_pourId_fkey" FOREIGN KEY ("pourId") REFERENCES "Pour"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "PourMouthfeel" ADD CONSTRAINT "PourMouthfeel_mouthfeelId_fkey" FOREIGN KEY ("mouthfeelId") REFERENCES "Mouthfeel"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "PourRating" ADD CONSTRAINT "PourRating_pourId_fkey" FOREIGN KEY ("pourId") REFERENCES "Pour"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "PourRating" ADD CONSTRAINT "PourRating_dimensionId_fkey" FOREIGN KEY ("dimensionId") REFERENCES "RatingDimension"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "WishlistItem" ADD CONSTRAINT "WishlistItem_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "WishlistItem" ADD CONSTRAINT "WishlistItem_lineId_fkey" FOREIGN KEY ("lineId") REFERENCES "Line"("id") ON DELETE SET NULL ON UPDATE CASCADE;

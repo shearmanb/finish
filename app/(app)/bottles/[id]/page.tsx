@@ -28,13 +28,13 @@ export default async function BottleDetailPage({
   const bottle = await getBottle(id);
   if (!bottle) notFound();
 
-  const { product } = bottle;
+  const { line } = bottle;
 
   return (
     <div>
       <PageHeader
-        title={product.name}
-        subtitle={`${product.distillery.name}${bottle.bottlingName ? ` · ${bottle.bottlingName}` : ""}`}
+        title={bottle.name || line.name}
+        subtitle={`${line.distillery.name} · ${line.name}${bottle.name && bottle.name !== line.name ? ` · ${bottle.name}` : ""}`}
         backHref="/bottles"
         action={
           <Button asChild variant="outline">
@@ -50,10 +50,13 @@ export default async function BottleDetailPage({
         {bottle.fillLevel != null ? (
           <Badge variant="muted">{bottle.fillLevel}% full</Badge>
         ) : null}
-        {product.caskStrength ? <Badge>Cask strength</Badge> : null}
-        {product.proof ? (
-          <Badge variant="secondary">{product.proof} proof</Badge>
+        {bottle.singleBarrel ? <Badge variant="secondary">Single Barrel</Badge> : null}
+        {bottle.caskStrength ? <Badge>Cask Strength</Badge> : null}
+        {bottle.t8kePick ? <Badge variant="default">T8ke Pick</Badge> : null}
+        {bottle.proof ? (
+          <Badge variant="muted">{Number(bottle.proof)} proof · {Number(bottle.proof) / 2}% ABV</Badge>
         ) : null}
+        {bottle.release ? <Badge variant="muted">{bottle.release}</Badge> : null}
       </div>
 
       {/* Tasting CTAs */}
@@ -92,32 +95,41 @@ export default async function BottleDetailPage({
       {/* Details */}
       <Card className="mb-5">
         <CardContent className="divide-y divide-border pt-2">
+          {bottle.category ? <InfoRow label="Type" value={bottle.category} /> : null}
+          {bottle.ageStatement ? <InfoRow label="Age" value={bottle.ageStatement} /> : null}
+          {bottle.mashBill ? <InfoRow label="Mash bill" value={bottle.mashBill} /> : null}
+          {bottle.finish ? <InfoRow label="Finish" value={bottle.finish} /> : null}
+          {bottle.bottleNumber ? <InfoRow label="Bottle #" value={bottle.bottleNumber} /> : null}
           <InfoRow label="Bought" value={formatDate(bottle.purchaseDate)} />
-          <InfoRow label="Store" value={bottle.store || "—"} />
+          {bottle.store ? <InfoRow label="Store" value={bottle.store.name} /> : null}
           <InfoRow label="Price paid" value={formatMoney(bottle.pricePaid?.toString())} />
           <InfoRow label="MSRP" value={formatMoney(bottle.msrp?.toString())} />
           {bottle.storageLocation ? (
             <InfoRow label="Storage" value={bottle.storageLocation} />
-          ) : null}
-          {product.mashBill ? (
-            <InfoRow label="Mash bill" value={product.mashBill} />
-          ) : null}
-          {product.ageStatement ? (
-            <InfoRow label="Age" value={product.ageStatement} />
           ) : null}
         </CardContent>
       </Card>
 
       {bottle.notes ? (
         <Card className="mb-5">
-          <CardContent className="pt-5 text-sm">{bottle.notes}</CardContent>
+          <CardContent className="pt-5">
+            <p className="mb-1 text-sm font-medium">Notes</p>
+            <p className="text-sm">{bottle.notes}</p>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {bottle.producerNotes ? (
+        <Card className="mb-5">
+          <CardContent className="pt-5">
+            <p className="mb-1 text-sm font-medium">Producer notes</p>
+            <p className="text-sm text-muted-foreground">{bottle.producerNotes}</p>
+          </CardContent>
         </Card>
       ) : null}
 
       {/* Pours */}
-      <h2 className="mb-3 font-semibold">
-        Pours ({bottle.pours.length})
-      </h2>
+      <h2 className="mb-3 font-semibold">Pours ({bottle.pours.length})</h2>
       {bottle.pours.length === 0 ? (
         <Card className="flex flex-col items-center gap-3 p-8 text-center">
           <GlassWater className="size-7 text-muted-foreground" />
