@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { PourEditorData } from "@/lib/data/pours";
 import { createPour } from "@/lib/actions/pours";
@@ -21,7 +20,6 @@ export function GuidedTasting({
   bottleId: string;
   data: PourEditorData;
 }) {
-  const router = useRouter();
   const draft = usePourDraft();
   const [pending, start] = React.useTransition();
   const [error, setError] = React.useState<string | null>(null);
