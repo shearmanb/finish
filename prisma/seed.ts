@@ -264,6 +264,76 @@ async function main() {
     }
   }
 
+  // ---------- Bottle types (hierarchical) ----------
+  const rootTypes = [
+    "Bourbon",
+    "Rye",
+    "Tennessee Whiskey",
+    "American Single Malt",
+    "Scotch",
+    "Irish Whiskey",
+    "Japanese Whisky",
+    "Canadian Whisky",
+    "World Whisky",
+    "Blend",
+  ];
+  for (const [i, name] of rootTypes.entries()) {
+    await lookup(m.bottleType, `bt_${slug(name)}`, { name, parentId: null, sortIndex: i });
+  }
+  const bourbonSubTypes = [
+    "High Rye Bourbon",
+    "Wheated Bourbon",
+    "Four Grain Bourbon",
+    "Kentucky Straight Bourbon",
+  ];
+  for (const [i, name] of bourbonSubTypes.entries()) {
+    await lookup(m.bottleType, `bt_${slug(name)}`, {
+      name,
+      parentId: "bt_bourbon",
+      sortIndex: i,
+    });
+  }
+  const scotchSubTypes = ["Single Malt Scotch", "Blended Scotch", "Blended Malt Scotch"];
+  for (const [i, name] of scotchSubTypes.entries()) {
+    await lookup(m.bottleType, `bt_${slug(name)}`, {
+      name,
+      parentId: "bt_scotch",
+      sortIndex: i,
+    });
+  }
+
+  // ---------- Mash bill types ----------
+  const mashBills = [
+    "Unknown",
+    "Traditional (75%+ corn)",
+    "High Rye (25%+ rye)",
+    "Wheated (wheat sub-grain)",
+    "Four Grain",
+    "High Corn (90%+ corn)",
+  ];
+  for (const [i, name] of mashBills.entries()) {
+    await lookup(m.mashBillType, `mb_${slug(name)}`, { name, sortIndex: i });
+  }
+
+  // ---------- Finish types ----------
+  const finishTypes = [
+    "Port",
+    "Sherry (Oloroso)",
+    "Sherry (PX)",
+    "Madeira",
+    "Rum",
+    "Toasted Oak",
+    "Double Oak",
+    "Beer / Stout",
+    "Wine",
+    "Cognac / Brandy",
+    "Maple",
+    "Honey Barrel",
+  ];
+  for (const [i, name] of finishTypes.entries()) {
+    await lookup(m.finishType, `ft_${slug(name)}`, { name, sortIndex: i });
+  }
+
   // ---------- Guided tasting steps ----------
   const steps: {
     id: string;

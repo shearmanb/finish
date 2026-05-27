@@ -3,7 +3,12 @@ import { PageHeader } from "@/components/app/page-header";
 import { BottleForm } from "@/components/forms/bottle-form";
 import { getBottle } from "@/lib/data/bottles";
 import { listLines } from "@/lib/data/lines";
-import { getActiveStores } from "@/lib/data/lookups";
+import {
+  getActiveStores,
+  getActiveBottleTypes,
+  getActiveMashBillTypes,
+  getActiveFinishTypes,
+} from "@/lib/data/lookups";
 
 export default async function EditBottlePage({
   params,
@@ -11,10 +16,13 @@ export default async function EditBottlePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [bottle, lines, stores] = await Promise.all([
+  const [bottle, lines, stores, bottleTypes, mashBillTypes, finishTypes] = await Promise.all([
     getBottle(id),
     listLines(),
     getActiveStores(),
+    getActiveBottleTypes(),
+    getActiveMashBillTypes(),
+    getActiveFinishTypes(),
   ]);
   if (!bottle) notFound();
 
@@ -29,20 +37,34 @@ export default async function EditBottlePage({
           distilleryName: l.distillery.name,
         }))}
         stores={stores.map((s) => ({ id: s.id, name: s.name }))}
+        bottleTypes={bottleTypes.map((t) => ({
+          id: t.id,
+          name: t.name,
+          parentId: t.parentId,
+        }))}
+        mashBillTypes={mashBillTypes.map((m) => ({ id: m.id, name: m.name }))}
+        finishTypes={finishTypes.map((f) => ({ id: f.id, name: f.name }))}
         initial={{
           lineId: bottle.lineId,
           name: bottle.name,
           proof: bottle.proof ? Number(bottle.proof) : null,
           singleBarrel: bottle.singleBarrel,
           caskStrength: bottle.caskStrength,
-          category: bottle.category,
-          mashBill: bottle.mashBill,
+          typeId: bottle.typeId,
+          subTypeId: bottle.subTypeId,
+          mashBillId: bottle.mashBillId,
           ageStatement: bottle.ageStatement,
           release: bottle.release,
           t8kePick: bottle.t8kePick,
           bottleNumber: bottle.bottleNumber,
-          finish: bottle.finish,
+          barrelNumber: bottle.barrelNumber,
+          hasBarrelFinish: bottle.hasBarrelFinish,
+          finishTypeId: bottle.finishTypeId,
           producerNotes: bottle.producerNotes,
+          websiteNotes: bottle.websiteNotes,
+          distilledDate: bottle.distilledDate
+            ? bottle.distilledDate.toISOString().slice(0, 10)
+            : null,
           status: bottle.status,
           fillLevel: bottle.fillLevel,
           purchaseDate: bottle.purchaseDate

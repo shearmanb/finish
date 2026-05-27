@@ -15,7 +15,9 @@ export type SimpleLookupKey =
   | "glassware"
   | "locations"
   | "mouthfeel"
-  | "phases";
+  | "phases"
+  | "mashBill"
+  | "finishTypes";
 
 type SimpleConfig = {
   key: SimpleLookupKey;
@@ -62,6 +64,18 @@ export const SIMPLE_LOOKUPS: Record<SimpleLookupKey, SimpleConfig> = {
     label: "Tasting Phases",
     singular: "Phase",
     delegate: () => prisma.tastingPhase as unknown as LookupDelegate,
+  },
+  mashBill: {
+    key: "mashBill",
+    label: "Mash Bill Options",
+    singular: "Mash Bill",
+    delegate: () => prisma.mashBillType as unknown as LookupDelegate,
+  },
+  finishTypes: {
+    key: "finishTypes",
+    label: "Finish Types",
+    singular: "Finish Type",
+    delegate: () => prisma.finishType as unknown as LookupDelegate,
   },
 };
 
@@ -179,6 +193,33 @@ export async function getGuidedStepsAll() {
   return prisma.guidedStep.findMany({
     orderBy: [{ isArchived: "asc" }, { sortIndex: "asc" }],
     include: { phase: true },
+  });
+}
+
+export async function getActiveBottleTypes() {
+  return prisma.bottleType.findMany({
+    where: { isArchived: false },
+    orderBy: [{ sortIndex: "asc" }, { name: "asc" }],
+  });
+}
+
+export async function getActiveMashBillTypes() {
+  return prisma.mashBillType.findMany({
+    where: { isArchived: false },
+    orderBy: [{ sortIndex: "asc" }, { name: "asc" }],
+  });
+}
+
+export async function getActiveFinishTypes() {
+  return prisma.finishType.findMany({
+    where: { isArchived: false },
+    orderBy: [{ sortIndex: "asc" }, { name: "asc" }],
+  });
+}
+
+export async function getBottleTypesAll() {
+  return prisma.bottleType.findMany({
+    orderBy: [{ isArchived: "asc" }, { sortIndex: "asc" }, { name: "asc" }],
   });
 }
 

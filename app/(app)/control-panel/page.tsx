@@ -9,6 +9,9 @@ import {
   Hand,
   Layers,
   Store,
+  Tag,
+  Wheat,
+  Flame,
   ChevronRight,
 } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
@@ -38,6 +41,24 @@ const SECTIONS = [
     title: "Tasting Phases",
     desc: "Nose, palate, finish…",
     icon: Layers,
+  },
+  {
+    href: "/control-panel/bottle-types",
+    title: "Bottle Types",
+    desc: "Bourbon, Rye, sub-types…",
+    icon: Tag,
+  },
+  {
+    href: "/control-panel/mashBill",
+    title: "Mash Bill Options",
+    desc: "High rye, wheated, etc.",
+    icon: Wheat,
+  },
+  {
+    href: "/control-panel/finishTypes",
+    title: "Finish Types",
+    desc: "Port, Sherry, Madeira…",
+    icon: Flame,
   },
   {
     href: "/control-panel/distilleries",

@@ -88,6 +88,68 @@ export async function moveLookup(
   return ok;
 }
 
+// ---------------- Inline store creation (from bottle form) ----------------
+
+export async function createStoreInline(
+  name: string,
+): Promise<Result & { store?: { id: string; name: string } }> {
+  const trimmed = name.trim();
+  if (!trimmed) return { ok: false, error: "Name is required." };
+  try {
+    const store = await prisma.store.create({ data: { name: trimmed } });
+    refresh();
+    return { ok: true, store: { id: store.id, name: store.name } };
+  } catch {
+    return { ok: false, error: "That store already exists." };
+  }
+}
+
+// ---------------- Bottle types ----------------
+
+export async function createBottleType(
+  name: string,
+  parentId: string | null,
+): Promise<Result> {
+  const trimmed = name.trim();
+  if (!trimmed) return { ok: false, error: "Name is required." };
+  const max = await prisma.bottleType.aggregate({ _max: { sortIndex: true } });
+  try {
+    await prisma.bottleType.create({
+      data: {
+        name: trimmed,
+        parentId: parentId || null,
+        sortIndex: (max._max.sortIndex ?? -1) + 1,
+      },
+    });
+  } catch {
+    return { ok: false, error: "Could not create type." };
+  }
+  refresh();
+  return ok;
+}
+
+export async function updateBottleType(
+  id: string,
+  name: string,
+  parentId: string | null,
+): Promise<Result> {
+  const trimmed = name.trim();
+  if (!trimmed) return { ok: false, error: "Name is required." };
+  if (parentId === id) return { ok: false, error: "A type can't be its own parent." };
+  await prisma.bottleType.update({
+    where: { id },
+    data: { name: trimmed, parentId: parentId || null },
+  });
+  refresh();
+  return ok;
+}
+
+export async function setBottleTypeArchived(id: string, isArchived: boolean): Promise<Result> {
+  await prisma.bottleType.update({ where: { id }, data: { isArchived } });
+  refresh();
+  return ok;
+}
+
 // ---------------- Flavor categories & flavors ----------------
 
 export async function createCategory(

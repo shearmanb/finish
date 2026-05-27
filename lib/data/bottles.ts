@@ -8,6 +8,8 @@ export async function listBottles(opts?: { status?: BottleStatus }) {
     orderBy: [{ createdAt: "desc" }],
     include: {
       line: { include: { distillery: true } },
+      type: true,
+      subType: true,
       photos: { orderBy: { sortIndex: "asc" }, take: 1 },
       _count: { select: { pours: true } },
     },
@@ -20,6 +22,10 @@ export async function getBottle(id: string) {
     include: {
       line: { include: { distillery: true } },
       store: true,
+      type: true,
+      subType: true,
+      mashBill: true,
+      finishType: true,
       photos: { orderBy: { sortIndex: "asc" } },
       pours: {
         orderBy: { pourNumber: "desc" },
@@ -39,14 +45,19 @@ export type BottleInput = {
   proof: number | null;
   singleBarrel: boolean;
   caskStrength: boolean;
-  category: string | null;
-  mashBill: string | null;
+  typeId: string | null;
+  subTypeId: string | null;
+  mashBillId: string | null;
   ageStatement: string | null;
   release: string | null;
   t8kePick: boolean;
   bottleNumber: string | null;
-  finish: string | null;
+  barrelNumber: string | null;
+  hasBarrelFinish: boolean;
+  finishTypeId: string | null;
   producerNotes: string | null;
+  websiteNotes: string | null;
+  distilledDate: string | null; // yyyy-mm-dd
   status: BottleStatus;
   fillLevel: number | null;
   purchaseDate: string | null; // yyyy-mm-dd

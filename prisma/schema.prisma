@@ -65,6 +65,42 @@ model Store {
   bottles    Bottle[]
 }
 
+model BottleType {
+  id             String       @id @default(cuid())
+  name           String
+  parentId       String?
+  parent         BottleType?  @relation("TypeHierarchy", fields: [parentId], references: [id])
+  subTypes       BottleType[] @relation("TypeHierarchy")
+  sortIndex      Int          @default(0)
+  isArchived     Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  bottles        Bottle[]     @relation("BottleToType")
+  subTypeBottles Bottle[]     @relation("BottleToSubType")
+
+  @@index([parentId])
+}
+
+model MashBillType {
+  id         String   @id @default(cuid())
+  name       String   @unique
+  sortIndex  Int      @default(0)
+  isArchived Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  bottles    Bottle[]
+}
+
+model FinishType {
+  id         String   @id @default(cuid())
+  name       String   @unique
+  sortIndex  Int      @default(0)
+  isArchived Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  bottles    Bottle[]
+}
+
 model Glassware {
   id         String   @id @default(cuid())
   name       String   @unique
@@ -198,20 +234,29 @@ model Bottle {
   id              String        @id @default(cuid())
   lineId          String
   line            Line          @relation(fields: [lineId], references: [id])
-  name            String? // specific bottle name / bottling name
+  name            String?
   proof           Decimal?      @db.Decimal(6, 2)
   singleBarrel    Boolean       @default(false)
   caskStrength    Boolean       @default(false)
-  category        String?
-  mashBill        String?
+  typeId          String?
+  type            BottleType?   @relation("BottleToType", fields: [typeId], references: [id])
+  subTypeId       String?
+  subType         BottleType?   @relation("BottleToSubType", fields: [subTypeId], references: [id])
+  mashBillId      String?
+  mashBill        MashBillType? @relation(fields: [mashBillId], references: [id])
   ageStatement    String?
-  release         String? // special release label
+  release         String?
   t8kePick        Boolean       @default(false)
-  bottleNumber    String? // optional bottle/barrel number
-  finish          String? // barrel finish (e.g. "Port Barrel")
-  producerNotes   String? // official producer tasting notes
+  bottleNumber    String?
+  barrelNumber    String?
+  hasBarrelFinish Boolean       @default(false)
+  finishTypeId    String?
+  finishType      FinishType?   @relation(fields: [finishTypeId], references: [id])
+  producerNotes   String?
+  websiteNotes    String?
+  distilledDate   DateTime?
   status          BottleStatus  @default(SEALED)
-  fillLevel       Int? // 0-100 percent remaining
+  fillLevel       Int?
   purchaseDate    DateTime?
   storeId         String?
   store           Store?        @relation(fields: [storeId], references: [id])
@@ -228,6 +273,8 @@ model Bottle {
 
   @@index([lineId])
   @@index([status])
+  @@index([typeId])
+  @@index([subTypeId])
 }
 
 model BottlePhoto {
