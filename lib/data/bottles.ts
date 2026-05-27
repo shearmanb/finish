@@ -21,6 +21,7 @@ export async function getBottle(id: string) {
     where: { id },
     include: {
       line: { include: { distillery: true } },
+      ndpDistillery: true,
       store: true,
       type: true,
       subType: true,
@@ -41,6 +42,7 @@ export async function getBottle(id: string) {
 
 export type BottleInput = {
   lineId: string;
+  ndpDistilleryId: string | null;
   name: string | null;
   proof: number | null;
   singleBarrel: boolean;

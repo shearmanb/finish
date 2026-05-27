@@ -53,6 +53,7 @@ model Distillery {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   lines      Line[]
+  ndpBottles Bottle[] @relation("BottleNdpDistillery")
 }
 
 model Store {
@@ -234,6 +235,8 @@ model Bottle {
   id              String        @id @default(cuid())
   lineId          String
   line            Line          @relation(fields: [lineId], references: [id])
+  ndpDistilleryId String?
+  ndpDistillery   Distillery?   @relation("BottleNdpDistillery", fields: [ndpDistilleryId], references: [id])
   name            String?
   proof           Decimal?      @db.Decimal(6, 2)
   singleBarrel    Boolean       @default(false)
@@ -275,6 +278,7 @@ model Bottle {
   @@index([status])
   @@index([typeId])
   @@index([subTypeId])
+  @@index([ndpDistilleryId])
 }
 
 model BottlePhoto {

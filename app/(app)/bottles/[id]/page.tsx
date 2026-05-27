@@ -107,6 +107,9 @@ export default async function BottleDetailPage({
       <Card className="mb-5">
         <CardContent className="divide-y divide-border pt-2">
           {typeDisplay ? <InfoRow label="Type" value={typeDisplay} /> : null}
+          {bottle.ndpDistillery ? (
+            <InfoRow label="Distilled by (NDP)" value={bottle.ndpDistillery.name} />
+          ) : null}
           {bottle.ageStatement ? <InfoRow label="Age" value={
             bottle.ageStatement === "NAS"
               ? "NAS (Not Age Stated)"

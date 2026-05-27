@@ -50,6 +50,7 @@ export default async function EditBottlePage({
         finishTypes={finishTypes.map((f) => ({ id: f.id, name: f.name }))}
         initial={{
           lineId: bottle.lineId,
+          ndpDistilleryId: bottle.ndpDistilleryId,
           name: bottle.name,
           proof: bottle.proof ? Number(bottle.proof) : null,
           singleBarrel: bottle.singleBarrel,

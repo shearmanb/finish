@@ -86,6 +86,14 @@ export function BottleForm({
   const [newDistName, setNewDistName] = React.useState("");
   const [lineError, setLineError] = React.useState<string | null>(null);
 
+  // NDP / source distillery (sourced bottles)
+  const [ndpDistilleryId, setNdpDistilleryId] = React.useState(
+    initial?.ndpDistilleryId ?? "",
+  );
+  const [addingNdpDist, setAddingNdpDist] = React.useState(false);
+  const [newNdpDistName, setNewNdpDistName] = React.useState("");
+  const [ndpError, setNdpError] = React.useState<string | null>(null);
+
   const [name, setName] = React.useState(initial?.name ?? "");
   const [proofVal, setProofVal] = React.useState(
     initial?.proof != null ? String(initial.proof) : "",
@@ -173,6 +181,21 @@ export function BottleForm({
     setAddingDist(false);
   }
 
+  async function addNdpDistillery() {
+    if (!newNdpDistName.trim()) return;
+    setNdpError(null);
+    const res = await createSimpleLookup("distilleries", newNdpDistName);
+    if (!res.ok || !res.id) {
+      setNdpError(res.error ?? "Could not add distillery.");
+      return;
+    }
+    const added = { id: res.id, name: newNdpDistName.trim() };
+    setDistilleries((prev) => [...prev, added]);
+    setNdpDistilleryId(added.id);
+    setNewNdpDistName("");
+    setAddingNdpDist(false);
+  }
+
   async function addLine() {
     if (!newLineName.trim()) {
       setLineError("Line name is required.");
@@ -216,6 +239,7 @@ export function BottleForm({
     setError(null);
     const input: BottleInput = {
       lineId,
+      ndpDistilleryId: ndpDistilleryId || null,
       name: name || null,
       proof: numOrNull(proofVal),
       singleBarrel,
@@ -379,6 +403,68 @@ export function BottleForm({
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. Eagle Rare 10 Year, Single Barrel #1234"
           />
+        </div>
+
+        {/* NDP / source distillery */}
+        <div>
+          <Label>NDP / source distillery (optional)</Label>
+          {addingNdpDist ? (
+            <div className="mt-1 flex items-center gap-1">
+              <Input
+                autoFocus
+                value={newNdpDistName}
+                onChange={(e) => setNewNdpDistName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") { e.preventDefault(); addNdpDistillery(); }
+                }}
+                placeholder="New distillery name"
+                className="flex-1"
+              />
+              <Button type="button" size="icon" variant="ghost" onClick={addNdpDistillery}>
+                <Check className="size-4" />
+              </Button>
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                onClick={() => { setAddingNdpDist(false); setNewNdpDistName(""); setNdpError(null); }}
+              >
+                <X className="size-4" />
+              </Button>
+            </div>
+          ) : (
+            <div className="mt-1 flex items-center gap-1">
+              <Select
+                value={ndpDistilleryId || NONE}
+                onValueChange={(v) => setNdpDistilleryId(v === NONE ? "" : v)}
+              >
+                <SelectTrigger className="flex-1">
+                  <SelectValue placeholder="Distilled by…" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NONE}>None / distilled in-house</SelectItem>
+                  {distilleries.map((d) => (
+                    <SelectItem key={d.id} value={d.id}>
+                      {d.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                onClick={() => setAddingNdpDist(true)}
+                title="Add new distillery"
+              >
+                <Plus className="size-4" />
+              </Button>
+            </div>
+          )}
+          {ndpError ? <p className="mt-1 text-xs text-destructive">{ndpError}</p> : null}
+          <p className="mt-1 text-xs text-muted-foreground">
+            The actual distillery of origin for sourced (non-distiller producer) bottles.
+          </p>
         </div>
 
         {/* Type & sub-type */}

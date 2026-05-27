@@ -18,6 +18,7 @@ function clean(input: BottleInput) {
   return {
     data: {
       lineId: input.lineId,
+      ndpDistilleryId: input.ndpDistilleryId || null,
       name: input.name?.trim() || null,
       proof,
       singleBarrel: input.singleBarrel,
