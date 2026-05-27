@@ -8,7 +8,6 @@ import { createBottle, updateBottle } from "@/lib/actions/bottles";
 import { createStoreInline, createSimpleLookup } from "@/lib/actions/lookups";
 import { createLineInline } from "@/lib/actions/lines";
 import type { BottleInput } from "@/lib/data/bottles";
-import { AgeStatementPicker } from "@/components/forms/age-statement-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,6 +40,19 @@ function numOrNull(s: string): number | null {
 
 // Radix Select forbids empty-string item values; use a sentinel for "none".
 const NONE = "__none__";
+
+// Age statement options. "NAS" = Not Age Stated; numbers are years; "30+" caps the list.
+const AGE_OPTIONS = [
+  "NAS",
+  ...Array.from({ length: 29 }, (_, i) => String(i + 2)), // 2..30
+  "30+",
+];
+
+function ageLabel(v: string) {
+  if (v === "NAS") return "NAS (Not Age Stated)";
+  if (v === "30+") return "30+ years";
+  return `${v} year${v === "1" ? "" : "s"}`;
+}
 
 export function BottleForm({
   lines: initialLines,
@@ -565,7 +577,22 @@ export function BottleForm({
         {/* Age statement */}
         <div>
           <Label>Age statement</Label>
-          <AgeStatementPicker value={ageStatement} onChange={setAgeStatement} />
+          <Select
+            value={ageStatement || NONE}
+            onValueChange={(v) => setAgeStatement(v === NONE ? "" : v)}
+          >
+            <SelectTrigger className="mt-1">
+              <SelectValue placeholder="Select age…" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={NONE}>Not set</SelectItem>
+              {AGE_OPTIONS.map((a) => (
+                <SelectItem key={a} value={a}>
+                  {ageLabel(a)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Mash bill */}
