@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { SIMPLE_LOOKUPS, type SimpleLookupKey } from "@/lib/data/lookups";
 
-type Result = { ok: boolean; error?: string };
+type Result = { ok: boolean; error?: string; id?: string };
 const ok: Result = { ok: true };
 
 function refresh() {
@@ -27,13 +27,14 @@ export async function createSimpleLookup(
   const next = rows.length ? Number(rows[0].sortIndex) + 1 : 0;
   const data: Record<string, unknown> = { name: trimmed, sortIndex: next };
   if (cfg.extraField && extra?.trim()) data[cfg.extraField.key] = extra.trim();
+  let created: Record<string, unknown>;
   try {
-    await delegate.create({ data });
+    created = await delegate.create({ data });
   } catch {
     return { ok: false, error: "That name already exists." };
   }
   refresh();
-  return ok;
+  return { ok: true, id: String(created.id) };
 }
 
 export async function updateSimpleLookup(
