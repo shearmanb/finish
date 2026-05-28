@@ -63,6 +63,45 @@ export async function createBottle(input: BottleInput): Promise<Result> {
   redirect(`/bottles/${bottle.id}`);
 }
 
+export type BatchBottleResult = {
+  index: number;
+  ok: boolean;
+  id?: string;
+  error?: string;
+};
+
+export async function createBottlesBatch(
+  inputs: BottleInput[],
+): Promise<BatchBottleResult[]> {
+  const cleaned = inputs.map((input, index) => ({
+    index,
+    result: clean(input),
+  }));
+  const firstError = cleaned.find((c) => "error" in c.result);
+  if (firstError && "error" in firstError.result) {
+    return [
+      { index: firstError.index, ok: false, error: firstError.result.error },
+    ];
+  }
+  const now = new Date();
+  const results: BatchBottleResult[] = [];
+  await prisma.$transaction(async (tx) => {
+    for (const { index, result } of cleaned) {
+      if ("error" in result) continue;
+      const bottle = await tx.bottle.create({
+        data: {
+          ...result.data,
+          openedAt: result.data.status === "OPEN" ? now : null,
+          finishedAt: result.data.status === "FINISHED" ? now : null,
+        },
+      });
+      results.push({ index, ok: true, id: bottle.id });
+    }
+  });
+  revalidatePath("/bottles");
+  return results;
+}
+
 export async function updateBottle(
   id: string,
   input: BottleInput,
