@@ -19,6 +19,19 @@ tasting phases) is editable in an in-app **Control Panel** — no code changes n
 per-phase flavor tags, mouthfeel, and a configurable set of scored dimensions (each with
 its own scale + optional descriptive anchor labels — e.g. the t8ke 0–10 Overall).
 
+## Cellar integration
+
+[Cellar](https://github.com/shearmanb/cellar) is the centralized bottle catalog — the
+single source of truth for bottle *identity* across all apps. Finish keeps everything
+about *your* bottles (status, fill level, price paid, pours, photos, notes) and links
+each bottle to its Cellar entry via `Bottle.cellarBottleId`.
+
+When adding a bottle, the **Source from Cellar** picker searches the catalog
+(`GET /api/bottles`) and, on selection, fills in the line/distillery (find-or-created
+locally to match Cellar's brand + distillery), bottle type, and MSRP, then stores the
+Cellar id. Set `CELLAR_API_URL` to your Cellar deployment to enable it; leave it blank
+to hide the picker. Reads are open, so no token is needed.
+
 ## Local development
 
 ```bash

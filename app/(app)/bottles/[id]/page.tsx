@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/app/status-badge";
 import { BottlePhotos } from "@/components/forms/bottle-photos";
 import { getBottle } from "@/lib/data/bottles";
+import { cellarBottleUrl } from "@/lib/cellar";
 import { formatMoney, formatDate, formatScore } from "@/lib/utils";
 
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
@@ -29,6 +30,8 @@ export default async function BottleDetailPage({
   if (!bottle) notFound();
 
   const { line } = bottle;
+  const cellarUrl =
+    bottle.cellarBottleId != null ? cellarBottleUrl(bottle.cellarBottleId) : null;
   const typeName = bottle.subType?.name ?? bottle.type?.name ?? null;
   const typeDisplay = bottle.type && bottle.subType
     ? `${bottle.type.name} · ${bottle.subType.name}`
@@ -106,6 +109,25 @@ export default async function BottleDetailPage({
       {/* Details */}
       <Card className="mb-5">
         <CardContent className="divide-y divide-border pt-2">
+          {bottle.cellarBottleId != null ? (
+            <InfoRow
+              label="Cellar catalog"
+              value={
+                cellarUrl ? (
+                  <a
+                    href={cellarUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-primary underline underline-offset-2"
+                  >
+                    #{bottle.cellarBottleId}
+                  </a>
+                ) : (
+                  `#${bottle.cellarBottleId}`
+                )
+              }
+            />
+          ) : null}
           {typeDisplay ? <InfoRow label="Type" value={typeDisplay} /> : null}
           {bottle.ndpDistillery ? (
             <InfoRow label="Distilled by (NDP)" value={bottle.ndpDistillery.name} />

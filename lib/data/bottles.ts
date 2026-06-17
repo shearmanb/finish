@@ -41,6 +41,7 @@ export async function getBottle(id: string) {
 }
 
 export type BottleInput = {
+  cellarBottleId: number | null;
   lineId: string;
   ndpDistilleryId: string | null;
   name: string | null;

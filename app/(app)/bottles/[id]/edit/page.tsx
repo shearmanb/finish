@@ -49,6 +49,7 @@ export default async function EditBottlePage({
         mashBillTypes={mashBillTypes.map((m) => ({ id: m.id, name: m.name }))}
         finishTypes={finishTypes.map((f) => ({ id: f.id, name: f.name }))}
         initial={{
+          cellarBottleId: bottle.cellarBottleId,
           lineId: bottle.lineId,
           ndpDistilleryId: bottle.ndpDistilleryId,
           name: bottle.name,

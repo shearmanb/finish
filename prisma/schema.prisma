@@ -233,6 +233,9 @@ model Line {
 
 model Bottle {
   id              String        @id @default(cuid())
+  // Cellar catalog id (immutable integer). Links this owned bottle to its
+  // canonical identity in Cellar; null for bottles not yet matched to the catalog.
+  cellarBottleId  Int?
   lineId          String
   line            Line          @relation(fields: [lineId], references: [id])
   ndpDistilleryId String?
@@ -279,6 +282,7 @@ model Bottle {
   @@index([typeId])
   @@index([subTypeId])
   @@index([ndpDistilleryId])
+  @@index([cellarBottleId])
 }
 
 model BottlePhoto {
