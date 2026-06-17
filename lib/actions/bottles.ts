@@ -17,6 +17,7 @@ function clean(input: BottleInput) {
     input.proof === null || Number.isNaN(input.proof) ? null : input.proof;
   return {
     data: {
+      cellarBottleId: input.cellarBottleId ?? null,
       lineId: input.lineId,
       ndpDistilleryId: input.ndpDistilleryId || null,
       name: input.name?.trim() || null,

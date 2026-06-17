@@ -293,6 +293,7 @@ export function MassAddForm({
   function submit() {
     setSubmitError(null);
     const inputs: BottleInput[] = rows.map((r) => ({
+      cellarBottleId: null,
       lineId: lockedLineId || r.lineId,
       name: r.name || null,
       proof: r.proof.trim() === "" ? null : Number(r.proof),

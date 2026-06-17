@@ -7,7 +7,9 @@ import type { BottleStatus } from "@prisma/client";
 import { createBottle, updateBottle } from "@/lib/actions/bottles";
 import { createStoreInline, createSimpleLookup } from "@/lib/actions/lookups";
 import { createLineInline } from "@/lib/actions/lines";
+import type { CellarPrefill } from "@/lib/actions/cellar";
 import type { BottleInput } from "@/lib/data/bottles";
+import { CellarPicker } from "@/components/forms/cellar-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -90,6 +92,12 @@ export function BottleForm({
   const [distilleries, setDistilleries] =
     React.useState<DistilleryOption[]>(initialDistilleries);
   const [lineId, setLineId] = React.useState(initial?.lineId ?? defaultLineId ?? "");
+
+  // Link to Cellar (the shared catalog). Identity fields are sourced from there.
+  const [cellarBottleId, setCellarBottleId] = React.useState<number | null>(
+    initial?.cellarBottleId ?? null,
+  );
+  const [cellarLabel, setCellarLabel] = React.useState("");
 
   const [addingLine, setAddingLine] = React.useState(false);
   const [newLineName, setNewLineName] = React.useState("");
@@ -247,9 +255,34 @@ export function BottleForm({
     setNewStoreName("");
   }
 
+  function applyCellar(prefill: CellarPrefill) {
+    setCellarBottleId(prefill.cellarBottleId);
+    setCellarLabel(prefill.label);
+    // Inject the resolved line so the picker can select it immediately.
+    setLines((prev) =>
+      prev.some((l) => l.id === prefill.lineOption.id)
+        ? prev
+        : [...prev, prefill.lineOption],
+    );
+    setLineId(prefill.lineId);
+    if (prefill.name) setName(prefill.name);
+    if (prefill.typeId) {
+      setTypeId(prefill.typeId);
+      setSubTypeId("");
+    }
+    if (prefill.msrp != null) setMsrp(String(prefill.msrp));
+    if (prefill.websiteNotes && !websiteNotes) setWebsiteNotes(prefill.websiteNotes);
+  }
+
+  function unlinkCellar() {
+    setCellarBottleId(null);
+    setCellarLabel("");
+  }
+
   function submit() {
     setError(null);
     const input: BottleInput = {
+      cellarBottleId,
       lineId,
       ndpDistilleryId: ndpDistilleryId || null,
       name: name || null,
@@ -289,6 +322,17 @@ export function BottleForm({
   return (
     <Card>
       <CardContent className="space-y-5 pt-5">
+
+        {/* Source identity from Cellar (the shared catalog) */}
+        <CellarPicker
+          linked={
+            cellarBottleId
+              ? { id: cellarBottleId, label: cellarLabel || `Cellar #${cellarBottleId}` }
+              : null
+          }
+          onApply={applyCellar}
+          onUnlink={unlinkCellar}
+        />
 
         {/* Line picker (with inline create) */}
         <div>
