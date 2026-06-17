@@ -35,11 +35,18 @@ export default async function BottlesPage({
         title="Bottles"
         subtitle="Your collection."
         action={
-          <Button asChild>
-            <Link href="/bottles/new">
-              <Plus className="size-4" /> Add
-            </Link>
-          </Button>
+          <div className="flex gap-2">
+            <Button asChild variant="outline">
+              <Link href="/bottles/mass-add">
+                <Plus className="size-4" /> Mass Add
+              </Link>
+            </Button>
+            <Button asChild>
+              <Link href="/bottles/new">
+                <Plus className="size-4" /> Add
+              </Link>
+            </Button>
+          </div>
         }
       />
 

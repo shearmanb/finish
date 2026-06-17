@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { logout } from "@/lib/actions/auth";
 import { cn } from "@/lib/utils";
+import { RickHouseMenu } from "@/components/app/rickhouse-menu";
 
 const NAV = [
   { href: "/", label: "Home", icon: Home, exact: true },
@@ -48,6 +49,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </span>
           <span className="text-lg font-semibold tracking-tight">Finish</span>
         </Link>
+        <div className="px-3 pb-1">
+          <RickHouseMenu className="w-full" />
+        </div>
         <nav className="flex-1 space-y-1 px-3">
           {SIDEBAR.map((item) => {
             const active = isActive(pathname, item.href, item.exact);
@@ -93,15 +97,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <span className="text-lg">🥃</span>
           <span className="font-semibold tracking-tight">Finish</span>
         </Link>
-        <form action={logout}>
-          <button
-            type="submit"
-            className="rounded-md p-2 text-muted-foreground hover:text-foreground"
-            aria-label="Sign out"
-          >
-            <LogOut className="size-5" />
-          </button>
-        </form>
+        <div className="flex items-center gap-1">
+          <RickHouseMenu />
+          <form action={logout}>
+            <button
+              type="submit"
+              className="rounded-md p-2 text-muted-foreground hover:text-foreground"
+              aria-label="Sign out"
+            >
+              <LogOut className="size-5" />
+            </button>
+          </form>
+        </div>
       </header>
 
       <main className="mx-auto w-full max-w-3xl px-4 pb-28 pt-5 md:max-w-4xl md:px-8 md:pb-12">

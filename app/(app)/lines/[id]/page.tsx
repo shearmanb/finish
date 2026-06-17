@@ -34,11 +34,20 @@ export default async function LineDetailPage({
 
       <div className="mb-3 flex items-center justify-between">
         <h2 className="font-semibold">Bottles ({line.bottles.length})</h2>
-        <Button asChild size="sm">
-          <Link href={`/bottles/new?lineId=${line.id}`}>
-            <Plus className="size-4" /> Add bottle
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button asChild size="sm" variant="outline">
+            <Link
+              href={`/bottles/mass-add?distilleryId=${line.distillery.id}&lineId=${line.id}`}
+            >
+              <Plus className="size-4" /> Add multiple
+            </Link>
+          </Button>
+          <Button asChild size="sm">
+            <Link href={`/bottles/new?lineId=${line.id}`}>
+              <Plus className="size-4" /> Add bottle
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {line.bottles.length === 0 ? (
